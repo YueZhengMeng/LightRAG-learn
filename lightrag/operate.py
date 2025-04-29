@@ -819,29 +819,39 @@ async def kg_query(
     system_prompt: str | None = None,
 ) -> str | AsyncIterator[str]:
     # Handle cache
+
+    # LLM接口
     use_model_func = (
         query_param.model_func
         if query_param.model_func
         else global_config["llm_model_func"]
     )
+    # 在缓存中查找是否有与当前query相似度大于阈值的缓存项
+    # quantized, min_val, max_val是int8量化后的query的embedding向量
+    # 如果缓存不命中，query的embedding向量会被一起保存到缓存数据中，用于以后的查找
     args_hash = compute_args_hash(query_param.mode, query, cache_type="query")
     cached_response, quantized, min_val, max_val = await handle_cache(
         hashing_kv, args_hash, query, query_param.mode, cache_type="query"
     )
+    # 如果命中，则直接返回缓存
     if cached_response is not None:
         return cached_response
 
+    # 调用LLM，生成query的关键词
     hl_keywords, ll_keywords = await get_keywords_from_query(
         query, query_param, global_config, hashing_kv
     )
 
+    # 将关键词保存到日志
     logger.debug(f"High-level keywords: {hl_keywords}")
     logger.debug(f"Low-level  keywords: {ll_keywords}")
 
     # Handle empty keywords
+    # 如果两个关键词列表都为空，则返回默认的错误响应
     if hl_keywords == [] and ll_keywords == []:
         logger.warning("low_level_keywords and high_level_keywords is empty")
         return PROMPTS["fail_response"]
+    # 如果其中一种关键词为空，则切换到另一种模式
     if ll_keywords == [] and query_param.mode in ["local", "hybrid"]:
         logger.warning(
             "low_level_keywords is empty, switching from %s mode to global mode",
@@ -855,10 +865,13 @@ async def kg_query(
         )
         query_param.mode = "local"
 
+    # 将关键词列表转换为字符串，用于后续embedding与相似度匹配
     ll_keywords_str = ", ".join(ll_keywords) if ll_keywords else ""
     hl_keywords_str = ", ".join(hl_keywords) if hl_keywords else ""
 
     # Build context
+    # 基于检索模式，根据关键词，构建检索上下文
+    # 其中包括与关键词最相关的 实体、关系和文本切片
     context = await _build_query_context(
         ll_keywords_str,
         hl_keywords_str,
@@ -869,36 +882,46 @@ async def kg_query(
         query_param,
     )
 
+    # 如果只需要检索结果context，则直接返回
     if query_param.only_need_context:
         return context
     if context is None:
         return PROMPTS["fail_response"]
 
     # Process conversation history
+    # 如果有历史对话，则组装为历史对话context
     history_context = ""
     if query_param.conversation_history:
         history_context = get_conversation_turns(
             query_param.conversation_history, query_param.history_turns
         )
 
+    # 获取系统提示词模板
     sys_prompt_temp = system_prompt if system_prompt else PROMPTS["rag_response"]
+    # 组装系统提示词
     sys_prompt = sys_prompt_temp.format(
         context_data=context,
         response_type=query_param.response_type,
         history=history_context,
     )
 
+    # 如果只需要prompt，则直接返回
     if query_param.only_need_prompt:
         return sys_prompt
 
+    # tokenize prompt，并记录token数量
     len_of_prompts = len(encode_string_by_tiktoken(query + sys_prompt))
     logger.debug(f"[kg_query]Prompt Tokens: {len_of_prompts}")
 
+    # 调用LLM接口
     response = await use_model_func(
         query,
         system_prompt=sys_prompt,
         stream=query_param.stream,
     )
+
+    # 如果response是包括sys_prompt在内的全序列
+    # 则去掉sys_prompt以及special token，只返回新增的response
     if isinstance(response, str) and len(response) > len(sys_prompt):
         response = (
             response.replace(sys_prompt, "")
@@ -911,6 +934,7 @@ async def kg_query(
         )
 
     # Save to cache
+    # 保存到缓存
     await save_to_cache(
         hashing_kv,
         CacheData(
@@ -924,6 +948,7 @@ async def kg_query(
             cache_type="query",
         ),
     )
+    # 返回response
     return response
 
 
@@ -949,10 +974,12 @@ async def get_keywords_from_query(
         A tuple containing (high_level_keywords, low_level_keywords)
     """
     # Check if pre-defined keywords are already provided
+    # 如果已经有提供了关键词，则直接返回
     if query_param.hl_keywords or query_param.ll_keywords:
         return query_param.hl_keywords, query_param.ll_keywords
 
     # Extract keywords using extract_keywords_only function which already supports conversation history
+    # 如果没有提供关键字，则调用LLM生成关键词
     hl_keywords, ll_keywords = await extract_keywords_only(
         query, query_param, global_config, hashing_kv
     )
@@ -966,16 +993,19 @@ async def extract_keywords_only(
     hashing_kv: BaseKVStorage | None = None,
 ) -> tuple[list[str], list[str]]:
     """
+    # 生成text的关键词
     Extract high-level and low-level keywords from the given 'text' using the LLM.
     This method does NOT build the final RAG context or provide a final answer.
     It ONLY extracts keywords (hl_keywords, ll_keywords).
     """
 
     # 1. Handle cache if needed - add cache type for keywords
+    # 在缓存中查找是否有与当前text相似度大于阈值的缓存项
     args_hash = compute_args_hash(param.mode, text, cache_type="keywords")
     cached_response, quantized, min_val, max_val = await handle_cache(
         hashing_kv, args_hash, text, param.mode, cache_type="keywords"
     )
+    # 如果命中，则尝试解析，解析成功后直接返回缓存
     if cached_response is not None:
         try:
             keywords_data = json.loads(cached_response)
@@ -988,6 +1018,7 @@ async def extract_keywords_only(
             )
 
     # 2. Build the examples
+    # 用于few shot的example数量，默认提供了3个
     example_number = global_config["addon_params"].get("example_number", None)
     if example_number and example_number < len(PROMPTS["keywords_extraction_examples"]):
         examples = "\n".join(
@@ -1000,6 +1031,7 @@ async def extract_keywords_only(
     )
 
     # 3. Process conversation history
+    # 如果有历史对话，则组装为历史对话context
     history_context = ""
     if param.conversation_history:
         history_context = get_conversation_turns(
@@ -1007,34 +1039,41 @@ async def extract_keywords_only(
         )
 
     # 4. Build the keyword-extraction prompt
+    # 获取关键词提取的prompt，并组装
     kw_prompt = PROMPTS["keywords_extraction"].format(
         query=text, examples=examples, language=language, history=history_context
     )
 
+    # tokenize prompt，并记录token数量
     len_of_prompts = len(encode_string_by_tiktoken(kw_prompt))
     logger.debug(f"[kg_query]Prompt Tokens: {len_of_prompts}")
 
     # 5. Call the LLM for keyword extraction
+    # 调用LLM接口函数
     use_model_func = (
         param.model_func if param.model_func else global_config["llm_model_func"]
     )
     result = await use_model_func(kw_prompt, keyword_extraction=True)
 
     # 6. Parse out JSON from the LLM response
+    # 使用正则表达式，提取出LLM的回答中的JSON部分
     match = re.search(r"\{.*\}", result, re.DOTALL)
     if not match:
         logger.error("No JSON-like structure found in the LLM respond.")
         return [], []
     try:
+        # 解析JSON
         keywords_data = json.loads(match.group(0))
     except json.JSONDecodeError as e:
         logger.error(f"JSON parsing error: {e}")
         return [], []
 
+    # 获取关键词列表
     hl_keywords = keywords_data.get("high_level_keywords", [])
     ll_keywords = keywords_data.get("low_level_keywords", [])
 
     # 7. Cache only the processed keywords with cache type
+    # 将关键词加入到缓存中
     if hl_keywords or ll_keywords:
         cache_data = {
             "high_level_keywords": hl_keywords,
@@ -1053,6 +1092,7 @@ async def extract_keywords_only(
                 cache_type="keywords",
             ),
         )
+    # 返回关键词
     return hl_keywords, ll_keywords
 
 
@@ -1077,19 +1117,23 @@ async def mix_kg_vector_query(
     3. Combining both results for comprehensive answer generation
     """
     # 1. Cache handling
+    # LLM接口
     use_model_func = (
         query_param.model_func
         if query_param.model_func
         else global_config["llm_model_func"]
     )
+    # 在缓存中查找是否有与当前query相似度大于阈值的缓存项
     args_hash = compute_args_hash("mix", query, cache_type="query")
     cached_response, quantized, min_val, max_val = await handle_cache(
         hashing_kv, args_hash, query, "mix", cache_type="query"
     )
+    # 如果命中，则直接返回缓存
     if cached_response is not None:
         return cached_response
 
     # Process conversation history
+    # 如果有历史对话，则拼接历史对话为history_context
     history_context = ""
     if query_param.conversation_history:
         history_context = get_conversation_turns(
@@ -1099,6 +1143,7 @@ async def mix_kg_vector_query(
     # 2. Execute knowledge graph and vector searches in parallel
     async def get_kg_context():
         try:
+            # 调用LLM，生成query的关键词
             hl_keywords, ll_keywords = await get_keywords_from_query(
                 query, query_param, global_config, hashing_kv
             )
@@ -1112,6 +1157,8 @@ async def mix_kg_vector_query(
             hl_keywords_str = ", ".join(hl_keywords) if hl_keywords else ""
 
             # Set query mode based on available keywords
+            # 默认使用需要两种关键词的hybrid模式
+            # 如果其中一种关键词为空，则切换到另一种模式
             if not ll_keywords_str and not hl_keywords_str:
                 return None
             elif not ll_keywords_str:
@@ -1122,6 +1169,8 @@ async def mix_kg_vector_query(
                 query_param.mode = "hybrid"
 
             # Build knowledge graph context
+            # 基于检索模式，根据关键词，构建检索上下文
+            # 其中包括与关键词最相关的 实体、关系和文本切片
             context = await _build_query_context(
                 ll_keywords_str,
                 hl_keywords_str,
@@ -1141,13 +1190,17 @@ async def mix_kg_vector_query(
 
     async def get_vector_context():
         # Consider conversation history in vector search
+        # 如果有历史对话上下文，则将其于query拼接，作为后续向量检索的query
         augmented_query = query
         if history_context:
             augmented_query = f"{history_context}\n{query}"
 
         try:
             # Reduce top_k for vector search in hybrid mode since we have structured information from KG
+            # 混合检索时，由于有结构化信息，所以需要减少文本切片的top_k，避免上下文太长
             mix_topk = min(10, query_param.top_k)
+
+            # 调用文本切片的向量数据库接口，获取与query最相似的top_k个文本切片
             results = await chunks_vdb.query(
                 augmented_query, top_k=mix_topk, ids=query_param.ids
             )
@@ -1158,11 +1211,15 @@ async def mix_kg_vector_query(
             chunks = await text_chunks_db.get_by_ids(chunks_ids)
 
             valid_chunks = []
+            # 过滤掉无有效内容的文本切片，同时为文本切片加入时间信息
             for chunk, result in zip(chunks, results):
                 if chunk is not None and "content" in chunk:
                     # Merge chunk content and time metadata
+                    # 原本的代码里有个bug，没有加入file_path信息，导致后面获取的时候报错
+                    # 从源仓库pr记录来看，这个检索模式还没做完。这里我先简单修复一下，代码能跑通就行。
                     chunk_with_time = {
                         "content": chunk["content"],
+                        "file_path": chunk["file_path"],
                         "created_at": result.get("created_at", None),
                     }
                     valid_chunks.append(chunk_with_time)
@@ -1170,6 +1227,7 @@ async def mix_kg_vector_query(
             if not valid_chunks:
                 return None
 
+            # 对检索到的文本切片进行encode，只保留累计token数量不超过max_token_for_text_unit的前几条
             maybe_trun_chunks = truncate_list_by_token_size(
                 valid_chunks,
                 key=lambda x: x["content"],
@@ -1180,6 +1238,7 @@ async def mix_kg_vector_query(
                 return None
 
             # Include time information in content
+            # 拼接文本切片部分的context
             formatted_chunks = []
             for c in maybe_trun_chunks:
                 chunk_text = "File path: " + c["file_path"] + "\n" + c["content"]
@@ -1187,6 +1246,7 @@ async def mix_kg_vector_query(
                     chunk_text = f"[Created at: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(c['created_at']))}]\n{chunk_text}"
                 formatted_chunks.append(chunk_text)
 
+            # 保存日志
             logger.debug(
                 f"Truncate chunks from {len(chunks)} to {len(formatted_chunks)} (max tokens:{query_param.max_token_for_text_unit})"
             )
@@ -1196,6 +1256,7 @@ async def mix_kg_vector_query(
             return None
 
     # 3. Execute both retrievals in parallel
+    # 并发执行知识图谱检索和文本切片检索
     kg_context, vector_context = await asyncio.gather(
         get_kg_context(), get_vector_context()
     )
@@ -1204,10 +1265,12 @@ async def mix_kg_vector_query(
     if kg_context is None and vector_context is None:
         return PROMPTS["fail_response"]
 
+    # 如果只需要检索结果context，则直接返回
     if query_param.only_need_context:
         return {"kg_context": kg_context, "vector_context": vector_context}
 
     # 5. Construct hybrid prompt
+    # 组装系统提示词
     sys_prompt = (
         system_prompt
         if system_prompt
@@ -1223,13 +1286,16 @@ async def mix_kg_vector_query(
         )
     )
 
+    # 如果只需要prompt，则直接返回
     if query_param.only_need_prompt:
         return sys_prompt
 
+    # tokenize prompt，并记录token数量
     len_of_prompts = len(encode_string_by_tiktoken(query + sys_prompt))
     logger.debug(f"[mix_kg_vector_query]Prompt Tokens: {len_of_prompts}")
 
     # 6. Generate response
+    # 调用LLM接口
     response = await use_model_func(
         query,
         system_prompt=sys_prompt,
@@ -1237,6 +1303,8 @@ async def mix_kg_vector_query(
     )
 
     # Clean up response content
+    # 如果response是包括sys_prompt在内的全序列
+    # 则去掉sys_prompt以及special token，只返回新增的response
     if isinstance(response, str) and len(response) > len(sys_prompt):
         response = (
             response.replace(sys_prompt, "")
@@ -1249,6 +1317,7 @@ async def mix_kg_vector_query(
         )
 
         # 7. Save cache - Only cache after collecting complete response
+        # 保存到缓存
         await save_to_cache(
             hashing_kv,
             CacheData(
@@ -1276,6 +1345,7 @@ async def _build_query_context(
     query_param: QueryParam,
 ):
     logger.info(f"Process {os.getpid()} buidling query context...")
+    # local模式，根据low level keywords获取上下文
     if query_param.mode == "local":
         entities_context, relations_context, text_units_context = await _get_node_data(
             ll_keywords,
@@ -1284,6 +1354,7 @@ async def _build_query_context(
             text_chunks_db,
             query_param,
         )
+    # global模式，根据high level keywords获取上下文
     elif query_param.mode == "global":
         entities_context, relations_context, text_units_context = await _get_edge_data(
             hl_keywords,
@@ -1292,6 +1363,7 @@ async def _build_query_context(
             text_chunks_db,
             query_param,
         )
+    # hybrid模式，根据high level keywords和low level keywords获取上下文，之后整合
     else:  # hybrid mode
         ll_data, hl_data = await asyncio.gather(
             _get_node_data(
@@ -1309,24 +1381,16 @@ async def _build_query_context(
                 query_param,
             ),
         )
-
-        (
-            ll_entities_context,
-            ll_relations_context,
-            ll_text_units_context,
-        ) = ll_data
-
-        (
-            hl_entities_context,
-            hl_relations_context,
-            hl_text_units_context,
-        ) = hl_data
-
+        # hybrid模式的检索结果需要拆解
+        (ll_entities_context, ll_relations_context, ll_text_units_context,) = ll_data
+        (hl_entities_context, hl_relations_context, hl_text_units_context,) = hl_data
+        # 合并上下文
         entities_context, relations_context, text_units_context = combine_contexts(
             [hl_entities_context, ll_entities_context],
             [hl_relations_context, ll_relations_context],
             [hl_text_units_context, ll_text_units_context],
         )
+
     # not necessary to use LLM to generate a response
     if not entities_context.strip() and not relations_context.strip():
         return None
@@ -1359,14 +1423,16 @@ async def _get_node_data(
     logger.info(
         f"Query nodes: {query}, top_k: {query_param.top_k}, cosine: {entities_vdb.cosine_better_than_threshold}"
     )
-
+    # 在实体向量库中检索content部分与query的最相似的实体
     results = await entities_vdb.query(
         query, top_k=query_param.top_k, ids=query_param.ids
     )
-
+    # 如果检索结果为空，则返回空字符串
     if not len(results):
         return "", "", ""
+
     # get entity information
+    # 从知识图谱中检索到的实体的信息，以及实体的度
     node_datas, node_degrees = await asyncio.gather(
         asyncio.gather(
             *[knowledge_graph_inst.get_node(r["entity_name"]) for r in results]
@@ -1379,12 +1445,15 @@ async def _get_node_data(
     if not all([n is not None for n in node_datas]):
         logger.warning("Some nodes are missing, maybe the storage is damaged")
 
+    # 将各节点的实体名与度添加到实体信息中
     node_datas = [
         {**n, "entity_name": k["entity_name"], "rank": d}
         for k, n, d in zip(results, node_datas, node_degrees)
         if n is not None
     ]  # what is this text_chunks_db doing.  dont remember it in airvx.  check the diagram.
+
     # get entitytext chunk
+    # 获取与检索到的实体最相关的文本块与边
     use_text_units, use_relations = await asyncio.gather(
         _find_most_related_text_unit_from_entities(
             node_datas, query_param, text_chunks_db, knowledge_graph_inst
@@ -1395,20 +1464,23 @@ async def _get_node_data(
     )
 
     len_node_datas = len(node_datas)
+    # 对检索到的实体的description进行tokenize，只保留累计token数量不超过max_token_for_local_context的前几条
     node_datas = truncate_list_by_token_size(
         node_datas,
         key=lambda x: x["description"] if x["description"] is not None else "",
         max_token_size=query_param.max_token_for_local_context,
     )
+
+    # 保存日志
     logger.debug(
         f"Truncate entities from {len_node_datas} to {len(node_datas)} (max tokens:{query_param.max_token_for_local_context})"
     )
-
     logger.info(
         f"Local query uses {len(node_datas)} entites, {len(use_relations)} relations, {len(use_text_units)} chunks"
     )
 
     # build prompt
+    # 汇总实体的信息，并转换为csv格式的字符串
     entites_section_list = [
         [
             "id",
@@ -1421,6 +1493,7 @@ async def _get_node_data(
         ]
     ]
     for i, n in enumerate(node_datas):
+        # 转换时间格式为人类可读的格式
         created_at = n.get("created_at", "UNKNOWN")
         if isinstance(created_at, (int, float)):
             created_at = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(created_at))
@@ -1439,8 +1512,10 @@ async def _get_node_data(
                 file_path,
             ]
         )
+    # 转换为csv格式的字符串
     entities_context = list_of_list_to_csv(entites_section_list)
 
+    # 汇总边的信息，并转换为csv格式的字符串
     relations_section_list = [
         [
             "id",
@@ -1455,6 +1530,7 @@ async def _get_node_data(
         ]
     ]
     for i, e in enumerate(use_relations):
+        # 转换时间格式为人类可读的格式
         created_at = e.get("created_at", "UNKNOWN")
         # Convert timestamp to readable format
         if isinstance(created_at, (int, float)):
@@ -1476,14 +1552,19 @@ async def _get_node_data(
                 file_path,
             ]
         )
+    # 转换为csv格式的字符串
     relations_context = list_of_list_to_csv(relations_section_list)
 
+    # 汇总文本块的信息，并转换为csv格式的字符串
     text_units_section_list = [["id", "content", "file_path"]]
     for i, t in enumerate(use_text_units):
         text_units_section_list.append(
             [i, t["content"], t.get("file_path", "unknown_source")]
         )
+    # 转换为csv格式的字符串
     text_units_context = list_of_list_to_csv(text_units_section_list)
+
+    # 返回csv格式的实体、边、文本切片数据
     return entities_context, relations_context, text_units_context
 
 
@@ -1493,25 +1574,29 @@ async def _find_most_related_text_unit_from_entities(
     text_chunks_db: BaseKVStorage,
     knowledge_graph_inst: BaseGraphStorage,
 ):
+    # 获取检索到的实体的来源文本切片ID，一个实体可能对应多个文本切片
     text_units = [
         split_string_by_multi_markers(dp["source_id"], [GRAPH_FIELD_SEP])
         for dp in node_datas
     ]
+    # 获取检索到的实体的边
     edges = await asyncio.gather(
         *[knowledge_graph_inst.get_node_edges(dp["entity_name"]) for dp in node_datas]
     )
+    # 从每个实体出发，距离仅一跳的下一个实体节点的ID
     all_one_hop_nodes = set()
     for this_edges in edges:
         if not this_edges:
             continue
         all_one_hop_nodes.update([e[1] for e in this_edges])
-
+    # 下一跳实体节点的信息
     all_one_hop_nodes = list(all_one_hop_nodes)
     all_one_hop_nodes_data = await asyncio.gather(
         *[knowledge_graph_inst.get_node(e) for e in all_one_hop_nodes]
     )
 
     # Add null check for node data
+    # 下一跳实体节点的来源文本切片ID。需要验证节点数据是否为空和是否拥有source_id字段
     all_one_hop_text_units_lookup = {
         k: set(split_string_by_multi_markers(v["source_id"], [GRAPH_FIELD_SEP]))
         for k, v in zip(all_one_hop_nodes, all_one_hop_nodes_data)
@@ -1520,7 +1605,8 @@ async def _find_most_related_text_unit_from_entities(
 
     all_text_units_lookup = {}
     tasks = []
-
+    # 创建一系列并发任务，用于根据文本切片ID获取文本切片数据
+    # text_units与edges的顺序，即index，与node_datas列表的索引顺序对应，越靠前相似度与query越高
     for index, (this_text_units, this_edges) in enumerate(zip(text_units, edges)):
         for c_id in this_text_units:
             if c_id not in all_text_units_lookup:
@@ -1530,7 +1616,7 @@ async def _find_most_related_text_unit_from_entities(
     # Process in batches of 25 tasks at a time to avoid overwhelming resources
     batch_size = 5
     results = []
-
+    # 分批次执行文本切片数据获取任务
     for i in range(0, len(tasks), batch_size):
         batch_tasks = tasks[i : i + batch_size]
         batch_results = await asyncio.gather(
@@ -1538,6 +1624,8 @@ async def _find_most_related_text_unit_from_entities(
         )
         results.extend(batch_results)
 
+    # 对于编号为index的实体节点，获取文本切片数据
+    # 并记录以文本切片为来源的，关系的数量
     for (c_id, index, this_edges), data in zip(tasks, results):
         all_text_units_lookup[c_id] = {
             "data": data,
@@ -1546,7 +1634,11 @@ async def _find_most_related_text_unit_from_entities(
         }
 
         if this_edges:
+            # 对于该节点的每一条边
             for e in this_edges:
+                # 如果该边指向的实体节点的在all_one_hop_text_units_lookup
+                # 当前实体节点的来源文本切片ID，在边指向的实体节点的来源文本切片ID列表中
+                # 等价于：统计当前文本切片c_id中，存在多少对关系
                 if (
                     e[1] in all_one_hop_text_units_lookup
                     and c_id in all_one_hop_text_units_lookup[e[1]]
@@ -1564,20 +1656,24 @@ async def _find_most_related_text_unit_from_entities(
         logger.warning("No valid text units found")
         return []
 
+    # 基于索引（相关性）升序、关系数降序，对检索到的文本切片进行排序
     all_text_units = sorted(
         all_text_units, key=lambda x: (x["order"], -x["relation_counts"])
     )
 
+    # 对检索到的文本切片进行tokenize，只保留累计token数量不超过max_token_for_text_unit的前几条
     all_text_units = truncate_list_by_token_size(
         all_text_units,
         key=lambda x: x["data"]["content"],
         max_token_size=query_param.max_token_for_text_unit,
     )
 
+    # 保存日志
     logger.debug(
         f"Truncate chunks from {len(all_text_units_lookup)} to {len(all_text_units)} (max tokens:{query_param.max_token_for_text_unit})"
     )
 
+    # 取出文本切片数据并返回
     all_text_units = [t["data"] for t in all_text_units]
     return all_text_units
 
@@ -1587,12 +1683,18 @@ async def _find_most_related_edges_from_entities(
     query_param: QueryParam,
     knowledge_graph_inst: BaseGraphStorage,
 ):
+    # 获取检索到的实体的边
     all_related_edges = await asyncio.gather(
         *[knowledge_graph_inst.get_node_edges(dp["entity_name"]) for dp in node_datas]
     )
+
     all_edges = []
     seen = set()
-
+    # 对于每个实体的每一条边
+    # 添加到all_edges中的同时去重
+    # sort是为了保证边的方向的一致性
+    # 使用seen这一集合进行去重，而不是直接判断sorted_edge是否在all_edges中，速度更快
+    # 不只使用seen集合并在最后将set转换为list，是为了保证添加过程的有序性。越早添加到all_edges的边，其对应的实体与query的相似度越高
     for this_edges in all_related_edges:
         for e in this_edges:
             sorted_edge = tuple(sorted(e))
@@ -1600,30 +1702,34 @@ async def _find_most_related_edges_from_entities(
                 seen.add(sorted_edge)
                 all_edges.append(sorted_edge)
 
+    # 获取边的数据，以及边的两个端点的度之和
     all_edges_pack, all_edges_degree = await asyncio.gather(
         asyncio.gather(*[knowledge_graph_inst.get_edge(e[0], e[1]) for e in all_edges]),
         asyncio.gather(
             *[knowledge_graph_inst.edge_degree(e[0], e[1]) for e in all_edges]
         ),
     )
+    # 汇总边的数据
     all_edges_data = [
         {"src_tgt": k, "rank": d, **v}
         for k, v, d in zip(all_edges, all_edges_pack, all_edges_degree)
         if v is not None
     ]
+    # 基于边的两侧端点的度之和、边的权重，对边进行降序排序
     all_edges_data = sorted(
         all_edges_data, key=lambda x: (x["rank"], x["weight"]), reverse=True
     )
+    # 对边的描述进行tokenize，只保留累计token数量不超过max_token_for_global_context的前几条
     all_edges_data = truncate_list_by_token_size(
         all_edges_data,
         key=lambda x: x["description"] if x["description"] is not None else "",
         max_token_size=query_param.max_token_for_global_context,
     )
-
+    # 保存日志
     logger.debug(
         f"Truncate relations from {len(all_edges)} to {len(all_edges_data)} (max tokens:{query_param.max_token_for_global_context})"
     )
-
+    # 返回边数据
     return all_edges_data
 
 
@@ -1634,17 +1740,19 @@ async def _get_edge_data(
     text_chunks_db: BaseKVStorage,
     query_param: QueryParam,
 ):
+    # get similar entities
     logger.info(
         f"Query edges: {keywords}, top_k: {query_param.top_k}, cosine: {relationships_vdb.cosine_better_than_threshold}"
     )
-
+    # 在关系向量库中检索content部分与query的最相似的关系
     results = await relationships_vdb.query(
         keywords, top_k=query_param.top_k, ids=query_param.ids
     )
-
+    # 如果检索结果为空，则返回空字符串
     if not len(results):
         return "", "", ""
 
+    # 获取边的数据，以及边的两个端点的度之和
     edge_datas, edge_degree = await asyncio.gather(
         asyncio.gather(
             *[knowledge_graph_inst.get_edge(r["src_id"], r["tgt_id"]) for r in results]
@@ -1657,6 +1765,7 @@ async def _get_edge_data(
         ),
     )
 
+    # 将各边的度添加到边信息中
     edge_datas = [
         {
             "src_id": k["src_id"],
@@ -1668,14 +1777,20 @@ async def _get_edge_data(
         for k, v, d in zip(results, edge_datas, edge_degree)
         if v is not None
     ]
+
+    # 基于边的两侧端点的度之和、边的权重，对边进行降序排序
     edge_datas = sorted(
         edge_datas, key=lambda x: (x["rank"], x["weight"]), reverse=True
     )
+
+    # 对检索到的关系的description进行tokenize，只保留累计token数量不超过max_token_for_global_context的前几条
     edge_datas = truncate_list_by_token_size(
         edge_datas,
         key=lambda x: x["description"] if x["description"] is not None else "",
         max_token_size=query_param.max_token_for_global_context,
     )
+
+    # 获取与检索到的关系最相关的实体与文本切片
     use_entities, use_text_units = await asyncio.gather(
         _find_most_related_entities_from_relationships(
             edge_datas, query_param, knowledge_graph_inst
@@ -1684,10 +1799,13 @@ async def _get_edge_data(
             edge_datas, query_param, text_chunks_db, knowledge_graph_inst
         ),
     )
+
+    # 保存日志
     logger.info(
         f"Global query uses {len(use_entities)} entites, {len(edge_datas)} relations, {len(use_text_units)} chunks"
     )
 
+    # 汇总关系的信息，并转换为csv格式的字符串
     relations_section_list = [
         [
             "id",
@@ -1702,6 +1820,7 @@ async def _get_edge_data(
         ]
     ]
     for i, e in enumerate(edge_datas):
+        # 转换时间格式为人类可读的格式
         created_at = e.get("created_at", "Unknown")
         # Convert timestamp to readable format
         if isinstance(created_at, (int, float)):
@@ -1723,12 +1842,15 @@ async def _get_edge_data(
                 file_path,
             ]
         )
+    # 转换为csv格式的字符串
     relations_context = list_of_list_to_csv(relations_section_list)
 
+    # 汇总实体的信息，并转换为csv格式的字符串
     entites_section_list = [
         ["id", "entity", "type", "description", "rank", "created_at", "file_path"]
     ]
     for i, n in enumerate(use_entities):
+        # 转换时间格式为人类可读的格式
         created_at = n.get("created_at", "Unknown")
         # Convert timestamp to readable format
         if isinstance(created_at, (int, float)):
@@ -1748,12 +1870,17 @@ async def _get_edge_data(
                 file_path,
             ]
         )
+    # 转换为csv格式的字符串
     entities_context = list_of_list_to_csv(entites_section_list)
 
+    # 汇总文本块的信息，并转换为csv格式的字符串
     text_units_section_list = [["id", "content", "file_path"]]
     for i, t in enumerate(use_text_units):
         text_units_section_list.append([i, t["content"], t.get("file_path", "unknown")])
+    # 转换为csv格式的字符串
     text_units_context = list_of_list_to_csv(text_units_section_list)
+
+    # 返回csv格式的实体、边、文本切片数据
     return entities_context, relations_context, text_units_context
 
 
@@ -1764,7 +1891,10 @@ async def _find_most_related_entities_from_relationships(
 ):
     entity_names = []
     seen = set()
-
+    # 对于每个关系的两端的实体
+    # 添加到entity_names中的同时去重
+    # 使用seen这一集合进行去重，而不是直接判断e是否在entity_names中，速度更快
+    # 不只使用seen集合并在最后将set转换为list，是为了保证添加过程的有序性。越早添加到entity_names的实体，其对应当边的重要性越高
     for e in edge_datas:
         if e["src_id"] not in seen:
             entity_names.append(e["src_id"])
@@ -1773,6 +1903,7 @@ async def _find_most_related_entities_from_relationships(
             entity_names.append(e["tgt_id"])
             seen.add(e["tgt_id"])
 
+    # 获取实体的数据，以及实体的度
     node_datas, node_degrees = await asyncio.gather(
         asyncio.gather(
             *[
@@ -1787,21 +1918,24 @@ async def _find_most_related_entities_from_relationships(
             ]
         ),
     )
+    # 汇总实体的信息
     node_datas = [
         {**n, "entity_name": k, "rank": d}
         for k, n, d in zip(entity_names, node_datas, node_degrees)
     ]
 
     len_node_datas = len(node_datas)
+    # 对实体的描述进行tokenize，只保留累计token数量不超过max_token_for_local_context的前几条
     node_datas = truncate_list_by_token_size(
         node_datas,
         key=lambda x: x["description"] if x["description"] is not None else "",
         max_token_size=query_param.max_token_for_local_context,
     )
+    # 保存日志
     logger.debug(
         f"Truncate entities from {len_node_datas} to {len(node_datas)} (max tokens:{query_param.max_token_for_local_context})"
     )
-
+    # 返回实体数据
     return node_datas
 
 
@@ -1811,6 +1945,7 @@ async def _find_related_text_unit_from_relationships(
     text_chunks_db: BaseKVStorage,
     knowledge_graph_inst: BaseGraphStorage,
 ):
+    # 获取检索到的关系的来源文本切片ID，一个关系可能对应多个文本切片
     text_units = [
         split_string_by_multi_markers(dp["source_id"], [GRAPH_FIELD_SEP])
         for dp in edge_datas
@@ -1818,6 +1953,9 @@ async def _find_related_text_unit_from_relationships(
     all_text_units_lookup = {}
 
     async def fetch_chunk_data(c_id, index):
+        """
+        根据文本切片ID获取文本切片内容的协程任务函数
+        """
         if c_id not in all_text_units_lookup:
             chunk_data = await text_chunks_db.get_by_id(c_id)
             # Only store valid data
@@ -1828,17 +1966,20 @@ async def _find_related_text_unit_from_relationships(
                 }
 
     tasks = []
+    # 创建一系列并发任务，用于根据文本切片ID获取文本切片数据
+    # index是edge_datas列表的索引顺序，越靠前其对应的edge在图谱中的度越大，重要性越高
     for index, unit_list in enumerate(text_units):
         for c_id in unit_list:
             tasks.append(fetch_chunk_data(c_id, index))
-
+    # 并发执行所有任务
     await asyncio.gather(*tasks)
 
     if not all_text_units_lookup:
         logger.warning("No valid text chunks found")
         return []
-
     all_text_units = [{"id": k, **v} for k, v in all_text_units_lookup.items()]
+
+    # 基于索引（重要性）升序，对检索到的文本切片进行排序
     all_text_units = sorted(all_text_units, key=lambda x: x["order"])
 
     # Ensure all text chunks have content
@@ -1850,26 +1991,34 @@ async def _find_related_text_unit_from_relationships(
         logger.warning("No valid text chunks after filtering")
         return []
 
+    # 对检索到的文本切片进行tokenize，只保留累计token数量不超过max_token_for_text_unit的前几条
     truncated_text_units = truncate_list_by_token_size(
         valid_text_units,
         key=lambda x: x["data"]["content"],
         max_token_size=query_param.max_token_for_text_unit,
     )
 
+    # 保存日志
     logger.debug(
         f"Truncate chunks from {len(valid_text_units)} to {len(truncated_text_units)} (max tokens:{query_param.max_token_for_text_unit})"
     )
 
+    # 取出文本切片数据并返回
     all_text_units: list[TextChunkSchema] = [t["data"] for t in truncated_text_units]
-
     return all_text_units
 
 
 def combine_contexts(entities, relationships, sources):
+    """
+    将字符串格式的high level context 和 low level context 转换回数据列表
+    然后对列表行进行去重与合并
+    之后再拼接为字符串返回
+    """
     # Function to extract entities, relationships, and sources from context strings
     hl_entities, ll_entities = entities[0], entities[1]
     hl_relationships, ll_relationships = relationships[0], relationships[1]
     hl_sources, ll_sources = sources[0], sources[1]
+
     # Combine and deduplicate the entities
     combined_entities = process_combine_contexts(hl_entities, ll_entities)
 

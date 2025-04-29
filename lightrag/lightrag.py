@@ -1365,6 +1365,7 @@ class LightRAG:
         global_config = asdict(self)
 
         if param.mode in ["local", "global", "hybrid"]:
+            # 基于关键词生成与知识图谱 的检索
             response = await kg_query(
                 query.strip(),
                 self.chunk_entity_relation_graph,
@@ -1402,7 +1403,9 @@ class LightRAG:
             )
         else:
             raise ValueError(f"Unknown mode {param.mode}")
+        # 执行缓存存储对象的后处理函数，将检索query与LLM的response组成的缓存保存到磁盘
         await self._query_done()
+        # 返回LLM的response
         return response
 
     def query_with_separate_keyword_extraction(

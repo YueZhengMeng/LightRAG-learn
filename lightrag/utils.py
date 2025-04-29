@@ -514,9 +514,18 @@ async def get_best_cached_response(
     original_prompt=None,
     cache_type=None,
 ) -> str | None:
+    """
+    # 先根据mode和cache_type，过滤缓存项
+    # 再逐个匹配，找出余弦相似度最高的缓存项
+    # 如果该项相似度大于阈值：
+    #   如果需要LLM检查确认，则调用LLM，给出0-1区间的相似度分数
+    #       如果该相似度小于阈值，则拒绝返回缓存
+    #   不需要LLM检查确认，则返回命中的缓存项
+    """
     logger.debug(
         f"get_best_cached_response:  mode={mode} cache_type={cache_type} use_llm_check={use_llm_check}"
     )
+    # 获取当前检索模式下的缓存数据
     mode_cache = await hashing_kv.get_by_id(mode)
     if not mode_cache:
         return None
@@ -527,15 +536,19 @@ async def get_best_cached_response(
     best_cache_id = None
 
     # Only iterate through cache entries for this mode
+    # 对于当前模式下的每一条缓存
     for cache_id, cache_data in mode_cache.items():
         # Skip if cache_type doesn't match
+        # 跳过缓存类型不匹配的
         if cache_type and cache_data.get("cache_type") != cache_type:
             continue
-
+        # 跳过embedding为空的
         if cache_data["embedding"] is None:
             continue
 
         # Convert cached embedding list to ndarray
+        # 缓存的embedding在保存到缓存时，进行过量化
+        # 这里需要进行反量化
         cached_quantized = np.frombuffer(
             bytes.fromhex(cache_data["embedding"]), dtype=np.uint8
         ).reshape(cache_data["embedding_shape"])
@@ -544,7 +557,7 @@ async def get_best_cached_response(
             cache_data["embedding_min"],
             cache_data["embedding_max"],
         )
-
+        # 计算余弦相似度，并找出最相似的缓存
         similarity = cosine_similarity(current_embedding, cached_embedding)
         if similarity > best_similarity:
             best_similarity = similarity
@@ -552,8 +565,12 @@ async def get_best_cached_response(
             best_prompt = cache_data["original_prompt"]
             best_cache_id = cache_id
 
+    # 如果有缓存项且相似度大于阈值
     if best_similarity > similarity_threshold:
         # If LLM check is enabled and all required parameters are provided
+        # 如果启用了LLM检查且所有需要的参数都提供了
+        # 则调用LLM，给出0-1区间的相似度分数
+        # 如果该相似度小于阈值，则拒绝返回缓存
         if (
             use_llm_check
             and llm_func
@@ -593,6 +610,7 @@ async def get_best_cached_response(
                 logger.warning(f"LLM similarity check failed: {e}")
                 return None  # Return None directly when LLM check fails
 
+        # 缓存命中，汇总日志信息
         prompt_display = (
             best_prompt[:50] + "..." if len(best_prompt) > 50 else best_prompt
         )
@@ -605,6 +623,7 @@ async def get_best_cached_response(
             "original_prompt": prompt_display,
         }
         logger.debug(json.dumps(log_data, ensure_ascii=False))
+        # 返回结果
         return best_response
     return None
 
@@ -649,27 +668,51 @@ async def handle_cache(
     mode="default",
     cache_type=None,
 ):
-    """Generic cache handling function"""
+    """
+    Generic cache handling function
+    # 通用缓存管理函数
+    # 在缓存数据库中，查找是否有与用户输入MD5相同 或 embedding向量相似度大于阈值的缓存项
+    """
+
+    # 如果缓存数据库为空，则直接返回None
     if hashing_kv is None:
         return None, None, None, None
 
+    # 如果mode不为default
+    # 例如检索后生成时，mode为'query'
     if mode != "default":  # handle cache for all type of query
+        # 如果未启用LLM缓存，则直接返回None
         if not hashing_kv.global_config.get("enable_llm_cache"):
             return None, None, None, None
 
         # Get embedding cache configuration
+        # 获取embedding缓存配置
         embedding_cache_config = hashing_kv.global_config.get(
             "embedding_cache_config",
             {"enabled": False, "similarity_threshold": 0.95, "use_llm_check": False},
         )
+        # 是否启用embedding缓存
         is_embedding_cache_enabled = embedding_cache_config["enabled"]
+        # 是否启用LLM判断缓存有没有命中
         use_llm_check = embedding_cache_config.get("use_llm_check", False)
 
         quantized = min_val = max_val = None
+        # 如果启用embedding缓存
         if is_embedding_cache_enabled:  # Use embedding simularity to match cache
+            # 对当前输入进行embedding
             current_embedding = await hashing_kv.embedding_func([prompt])
+            # LLM接口
             llm_model_func = hashing_kv.global_config.get("llm_model_func")
+            # 对当前输入的embedding进行量化，压缩存储空间占用量
+            # 默认为int8量化，即将float64格式的向量，映射到0-255之间的int8整数表示的区间端点
+            # 同时返回min_val和max_val，表示量化前的最大最小区间端点，用于后续的反量化还原embedding
             quantized, min_val, max_val = quantize_embedding(current_embedding[0])
+            # 先根据mode和cache_type，过滤缓存项
+            # 再逐个匹配，找出余弦相似度最高的缓存项
+            # 如果该项相似度大于阈值：
+            #   如果需要LLM检查确认，则调用LLM，给出0-1区间的相似度分数
+            #       如果该相似度小于阈值，则拒绝返回缓存
+            #   不需要LLM检查确认，则返回命中的缓存项
             best_cached_response = await get_best_cached_response(
                 hashing_kv,
                 current_embedding[0],
@@ -680,9 +723,11 @@ async def handle_cache(
                 original_prompt=prompt,
                 cache_type=cache_type,
             )
+            # 如果缓存命中，则返回
             if best_cached_response is not None:
                 logger.debug(f"Embedding cached hit(mode:{mode} type:{cache_type})")
                 return best_cached_response, None, None, None
+            # 否则，返回量化后的当前输入embedding，用于保存到缓存中
             else:
                 # if caching keyword embedding is enabled, return the quantized embedding for saving it latter
                 logger.debug(f"Embedding cached missed(mode:{mode} type:{cache_type})")
@@ -693,16 +738,23 @@ async def handle_cache(
             return None, None, None, None
 
     # Here is the conditions of code reaching this point:
+    # 运行到达这里的条件:
     #     1. All query mode: enable_llm_cache is True and embedding simularity is not enabled
+    #     1. 通用模式：启用LLM缓存，但不启用embedding相似度匹配
     #     2. Entity extract: enable_llm_cache_for_entity_extract is True
+    #     2. 实体抽取模式：启用LLM缓存for实体抽取
+
+    # 根据id（默认为MD5值）获取缓存数据
     if exists_func(hashing_kv, "get_by_mode_and_id"):
         mode_cache = await hashing_kv.get_by_mode_and_id(mode, args_hash) or {}
     else:
         mode_cache = await hashing_kv.get_by_id(mode) or {}
+
+    # 如果缓存数据存在，则返回缓存数据
     if args_hash in mode_cache:
         logger.debug(f"Non-embedding cached hit(mode:{mode} type:{cache_type})")
         return mode_cache[args_hash]["return"], None, None, None
-
+    # 如果缓存数据不存在，则返回None
     logger.debug(f"Non-embedding cached missed(mode:{mode} type:{cache_type})")
     return None, None, None, None
 

@@ -1,0 +1,603 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d9" for="edge" attr.name="file_path" attr.type="string" />
+  <key id="d8" for="edge" attr.name="source_id" attr.type="string" />
+  <key id="d7" for="edge" attr.name="keywords" attr.type="string" />
+  <key id="d6" for="edge" attr.name="description" attr.type="string" />
+  <key id="d5" for="edge" attr.name="weight" attr.type="double" />
+  <key id="d4" for="node" attr.name="file_path" attr.type="string" />
+  <key id="d3" for="node" attr.name="source_id" attr.type="string" />
+  <key id="d2" for="node" attr.name="description" attr.type="string" />
+  <key id="d1" for="node" attr.name="entity_type" attr.type="string" />
+  <key id="d0" for="node" attr.name="entity_id" attr.type="string" />
+  <graph edgedefault="undirected">
+    <node id="鲁镇">
+      <data key="d0">鲁镇</data>
+      <data key="d1">geo</data>
+      <data key="d2">鲁镇是一个虚构的小镇，故事中的酒店坐落于此，具有独特的格局和文化氛围。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="咸亨酒店">
+      <data key="d0">咸亨酒店</data>
+      <data key="d1">organization</data>
+      <data key="d2">咸亨酒店是鲁镇的一家酒店，以尺形大柜台和提供温酒服务著称，是做工人员休息和饮酒的地方。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="掌柜">
+      <data key="d0">掌柜</data>
+      <data key="d1">person</data>
+      <data key="d2">掌柜是咸亨酒店的老板或管理者，对雇员严格要求，并根据顾客身份提供不同服务。&lt;SEP&gt;掌柜是酒店的老板，态度凶恶，对员工和顾客都不友好，给店里营造了一种压抑的氛围。&lt;SEP&gt;掌柜是故事中的一个小酒馆老板，对孔乙己既嘲笑又利用，常常通过提问引人发笑以活跃气氛。&lt;SEP&gt;掌柜是酒店的老板，负责管理账目和经营事务，对孔乙己的欠账表示关注。&lt;SEP&gt;掌柜是故事中的一个角色，经营着一家店铺，并与孔乙己有互动。&lt;SEP&gt;掌柜是故事中的一个角色，经营着一家酒馆，经常与孔乙己互动并取笑他。</data>
+      <data key="d3">chunk-9f6539d16a8de54cbf4c80dc47ddf17f&lt;SEP&gt;chunk-13f819ed35d9eb4292722ed68c3e9e8a&lt;SEP&gt;chunk-81b290d469a8ab3ad80151d63aef2d78&lt;SEP&gt;chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-43e2c58b84299c01cfdc5106fcf3e983&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="短衣帮">
+      <data key="d0">短衣帮</data>
+      <data key="d1">category</data>
+      <data key="d2">短衣帮是指在咸亨酒店消费便宜酒菜的普通劳动人民，通常站着喝酒，经济条件有限。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="长衫主顾">
+      <data key="d0">长衫主顾</data>
+      <data key="d1">category</data>
+      <data key="d2">长衫主顾是在咸亨酒店里消费较高档次酒菜的富裕顾客，通常坐在房子里慢慢喝酒。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="我">
+      <data key="d0">我</data>
+      <data key="d1">person</data>
+      <data key="d2">我是咸亨酒店的伙计，从十二岁起在此工作，负责温酒等单调任务。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="黄酒">
+      <data key="d0">黄酒</data>
+      <data key="d1">category</data>
+      <data key="d2">黄酒是咸亨酒店提供的主要饮品之一，顾客可以选择温热后饮用。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="盐煮笋">
+      <data key="d0">盐煮笋</data>
+      <data key="d1">category</data>
+      <data key="d2">盐煮笋是咸亨酒店提供的一种便宜下酒菜，需额外花费一文钱购买。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="茴香豆">
+      <data key="d0">茴香豆</data>
+      <data key="d1">category</data>
+      <data key="d2">茴香豆是一种小食品，在文中作为孔乙己试图教育孩子的媒介。&lt;SEP&gt;茴香豆是另一种便宜的下酒菜，与盐煮笋一同作为顾客的选择。&lt;SEP&gt;茴香豆是孔乙己常点的一种下酒菜，反映了他生活的简朴与习惯。&lt;SEP&gt;茴香豆是孔乙己用来吸引邻舍孩子的食物，象征着他与孩子们的互动。</data>
+      <data key="d3">chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-43e2c58b84299c01cfdc5106fcf3e983&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922&lt;SEP&gt;chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="荤菜">
+      <data key="d0">荤菜</data>
+      <data key="d1">category</data>
+      <data key="d2">荤菜是较贵的下酒菜，需花费十几文钱才能购买。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="推荐人">
+      <data key="d0">推荐人</data>
+      <data key="d1">person</data>
+      <data key="d2">推荐人是帮助我获得咸亨酒店工作机会的人，在我面临辞退时发挥了重要作用。</data>
+      <data key="d3">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="孔乙己">
+      <data key="d0">孔乙己</data>
+      <data key="d1">person</data>
+      <data key="d2">孔乙己是一个喜欢卖弄学问、善良但有偷窃习惯的人物，经常在酒店里与人互动。&lt;SEP&gt;孔乙己是一个站着喝酒却穿着长衫的特殊人物，身材高大但脸色青白，脸上时常有伤痕，留着乱蓬蓬的花白胡子。他说话满口之乎者也，让人半懂不懂，因姓孔而得名孔乙己。&lt;SEP&gt;孔乙己是一个读书人，虽然没有进学，但会写字。他性格好喝懒做，偶尔偷窃，但在酒店里品行较好，从不拖欠酒钱。&lt;SEP&gt;孔乙己是一个被社会边缘化的读书人，经常成为众人取笑的对象。他有学问但未能考中秀才，试图通过教导孩子来证明自己的价值。&lt;SEP&gt;孔乙己是一个贫穷的读书人，经常到掌柜的店里喝酒，因偷窃而被打断了腿。&lt;SEP&gt;孔乙己是一个贫穷而潦倒的读书人，常因偷窃行为被嘲笑，最后可能已经去世。</data>
+      <data key="d3">chunk-9f6539d16a8de54cbf4c80dc47ddf17f&lt;SEP&gt;chunk-13f819ed35d9eb4292722ed68c3e9e8a&lt;SEP&gt;chunk-81b290d469a8ab3ad80151d63aef2d78&lt;SEP&gt;chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="主顾">
+      <data key="d0">主顾</data>
+      <data key="d1">category</data>
+      <data key="d2">主顾指酒店的顾客群体，普遍对孔乙己抱有嘲笑和戏弄的态度。</data>
+      <data key="d3">chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="酒店">
+      <data key="d0">酒店</data>
+      <data key="d1">organization</data>
+      <data key="d2">酒店是孔乙己常去的地方，也是众人嘲笑他的场所，充满了快活的空气。&lt;SEP&gt;酒店是故事发生的场所，雇用了孔乙己并安排他专管温酒的职务。&lt;SEP&gt;酒店是孔乙己经常光顾的地方，也是故事发生的主要场所之一。</data>
+      <data key="d3">chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="荐头">
+      <data key="d0">荐头</data>
+      <data key="d1">person</data>
+      <data key="d2">荐头是孔乙己的推荐人，因情面大使得孔乙己未被辞退，转而安排了温酒的职务。</data>
+      <data key="d3">chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="何家">
+      <data key="d0">何家</data>
+      <data key="d1">organization</data>
+      <data key="d2">何家是孔乙己曾经偷书的地方，代表了一个家庭或家族。&lt;SEP&gt;何家是孔乙己被指控偷书的对象，事件导致了他对偷窃指控的辩解。</data>
+      <data key="d3">chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="秀才">
+      <data key="d0">秀才</data>
+      <data key="d1">category</data>
+      <data key="d2">秀才是古代科举制度中的一个功名，象征着知识和地位，孔乙己未能取得这一成就。&lt;SEP&gt;秀才是古代科举制度中的一个级别，代表了一种学问和地位。</data>
+      <data key="d3">chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="众人">
+      <data key="d0">众人</data>
+      <data key="d1">category</data>
+      <data key="d2">众人是一群围观孔乙己并嘲笑他的人，代表了冷漠的社会群体。&lt;SEP&gt;众人是指酒店里的其他顾客，他们经常嘲笑孔乙己，表现出对他的轻视和不尊重。</data>
+      <data key="d3">chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="钞书工作">
+      <data key="d0">钞书工作</data>
+      <data key="d1">category</data>
+      <data key="d2">钞书工作是孔乙己的一种谋生手段，通过抄写书籍换取食物。</data>
+      <data key="d3">chunk-e4a72ca66388f855abf445099826007d</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="偷窃行为">
+      <data key="d0">偷窃行为</data>
+      <data key="d1">category</data>
+      <data key="d2">偷窃行为是指孔乙己因生活困难而偶尔进行的盗窃活动。</data>
+      <data key="d3">chunk-e4a72ca66388f855abf445099826007d</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="旁人">
+      <data key="d0">旁人</data>
+      <data key="d1">person</data>
+      <data key="d2">旁人指围观孔乙己并与他互动的人群，代表了社会中对弱者缺乏同情心的群体。&lt;SEP&gt;旁人是指酒馆中的其他顾客，他们对孔乙己的行为表现出冷漠和嘲笑。</data>
+      <data key="d3">chunk-1a93cfe8afaf6a320d5ce20361af4922&lt;SEP&gt;chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="孩子">
+      <data key="d0">孩子</data>
+      <data key="d1">category</data>
+      <data key="d2">孩子是孔乙己试图教导的对象，象征着他希望通过教育来传递知识的愿望。</data>
+      <data key="d3">chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="之乎者也">
+      <data key="d0">之乎者也</data>
+      <data key="d1">category</data>
+      <data key="d2">之乎者也是孔乙己使用的文言词汇，显示了他的学问背景和表达方式。</data>
+      <data key="d3">chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="丁举人">
+      <data key="d0">丁举人</data>
+      <data key="d1">person</data>
+      <data key="d2">丁举人是一个有权势的人物，孔乙己因偷窃被他惩罚。&lt;SEP&gt;丁举人是一位有钱有势的人物，孔乙己因偷他家的东西而被打断了腿。</data>
+      <data key="d3">chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="邻舍孩子">
+      <data key="d0">邻舍孩子</data>
+      <data key="d1">category</data>
+      <data key="d2">邻舍孩子是一群围绕着孔乙己的孩子，对茴香豆表现出兴趣。</data>
+      <data key="d3">chunk-b971ccabec29335d2c9d22bc5ffad65f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="中秋">
+      <data key="d0">中秋</data>
+      <data key="d1">event</data>
+      <data key="d2">中秋是一个传统节日，在文中提到的时间背景，暗示了故事发生的时间点。&lt;SEP&gt;中秋是中国传统节日，在文中用来表示时间背景。&lt;SEP&gt;中秋是中国传统节日，文中提到时暗示了孔乙己逐渐消失的身影。</data>
+      <data key="d3">chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-9f6539d16a8de54cbf4c80dc47ddf17f&lt;SEP&gt;chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="酒店柜台">
+      <data key="d0">酒店柜台</data>
+      <data key="d1">geo</data>
+      <data key="d2">酒店柜台是孔乙己与掌柜互动的具体地点，也是他展示学问的地方。</data>
+      <data key="d3">chunk-b971ccabec29335d2c9d22bc5ffad65f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="回字写法">
+      <data key="d0">回字写法</data>
+      <data key="d1">category</data>
+      <data key="d2">回字写法是孔乙己用来炫耀自己知识的一个话题，反映了他对传统文化的执着。</data>
+      <data key="d3">chunk-b971ccabec29335d2c9d22bc5ffad65f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="初冬">
+      <data key="d0">初冬</data>
+      <data key="d1">category</data>
+      <data key="d2">初冬表示季节变化，暗示天气逐渐变冷。</data>
+      <data key="d3">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="店铺">
+      <data key="d0">店铺</data>
+      <data key="d1">organization</data>
+      <data key="d2">掌柜经营的店铺，是孔乙己经常光顾的地方。</data>
+      <data key="d3">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="酒">
+      <data key="d0">酒</data>
+      <data key="d1">category</data>
+      <data key="d2">文中提到的酒是孔乙己消费的主要物品，体现了他的生活习惯。</data>
+      <data key="d3">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="蒲包">
+      <data key="d0">蒲包</data>
+      <data key="d1">category</data>
+      <data key="d2">孔乙己用来垫在腿下的蒲包，反映了他贫困的生活状态。</data>
+      <data key="d3">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="草绳">
+      <data key="d0">草绳</data>
+      <data key="d1">category</data>
+      <data key="d2">孔乙己用草绳将蒲包挂在肩上，进一步说明了他的贫困。</data>
+      <data key="d3">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="秋风">
+      <data key="d0">秋风</data>
+      <data key="d1">category</data>
+      <data key="d2">文中通过秋风的变化来表现季节的更替和时间的推移。</data>
+      <data key="d3">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="酒馆">
+      <data key="d0">酒馆</data>
+      <data key="d1">geo</data>
+      <data key="d2">酒馆是故事的主要场景之一，也是孔乙己经常光顾的地方。</data>
+      <data key="d3">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="年关">
+      <data key="d0">年关</data>
+      <data key="d1">event</data>
+      <data key="d2">年关是中国传统节日，文中提到多次，象征时间的流逝和孔乙己的命运变化。</data>
+      <data key="d3">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="端午">
+      <data key="d0">端午</data>
+      <data key="d1">event</data>
+      <data key="d2">端午是中国传统节日，在文中用来标记时间的推移和孔乙己的欠账情况。</data>
+      <data key="d3">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="四文大钱">
+      <data key="d0">四文大钱</data>
+      <data key="d1">category</data>
+      <data key="d2">四文大钱是孔乙己用来支付酒钱的货币单位，反映了他贫困的生活状态。</data>
+      <data key="d3">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="破衣袋">
+      <data key="d0">破衣袋</data>
+      <data key="d1">category</data>
+      <data key="d2">破衣袋是孔乙己存放钱财的地方，象征他的贫穷与潦倒。</data>
+      <data key="d3">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <node id="粉板">
+      <data key="d0">粉板</data>
+      <data key="d1">category</data>
+      <data key="d2">粉板是掌柜用来记录欠账的工具，文中提到孔乙己的欠账情况。</data>
+      <data key="d3">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d4">./kongyiji/kongyiji.txt</data>
+    </node>
+    <edge source="鲁镇" target="咸亨酒店">
+      <data key="d5">8.0</data>
+      <data key="d6">咸亨酒店位于鲁镇，是该镇的一个重要场所，反映了当地的文化和社会结构。</data>
+      <data key="d7">地理位置, 社会背景</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="咸亨酒店" target="掌柜">
+      <data key="d5">9.0</data>
+      <data key="d6">掌柜是咸亨酒店的管理者，负责安排员工工作并监督服务质量。</data>
+      <data key="d7">管理关系, 职责分配</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="咸亨酒店" target="短衣帮">
+      <data key="d5">7.0</data>
+      <data key="d6">短衣帮是咸亨酒店的主要顾客群体之一，通常在柜台外站着喝酒。</data>
+      <data key="d7">顾客类型, 消费习惯</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="咸亨酒店" target="长衫主顾">
+      <data key="d5">8.0</data>
+      <data key="d6">长衫主顾是咸亨酒店的另一顾客群体，享受更高档次的服务和环境。</data>
+      <data key="d7">顾客类型, 服务差异</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="咸亨酒店" target="黄酒">
+      <data key="d5">8.0</data>
+      <data key="d6">咸亨酒店提供黄酒作为主要饮品，并为顾客提供温酒服务。</data>
+      <data key="d7">产品供应, 酒店服务</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="掌柜" target="我">
+      <data key="d5">6.0</data>
+      <data key="d6">我在掌柜的安排下负责温酒工作，虽然无聊但避免被辞退。</data>
+      <data key="d7">雇佣关系, 工作职责</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="掌柜" target="推荐人">
+      <data key="d5">5.0</data>
+      <data key="d6">掌柜因推荐人的面子无法轻易辞退我，显示了人际关系在工作中的重要性。</data>
+      <data key="d7">人情关系, 工作保留</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="掌柜" target="酒店">
+      <data key="d5">8.0</data>
+      <data key="d6">掌柜是酒店的老板，管理酒店事务并对孔乙己的态度冷漠。</data>
+      <data key="d7">管理关系, 权力结构</data>
+      <data key="d8">chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="掌柜" target="孔乙己">
+      <data key="d5">30.0</data>
+      <data key="d6">孔乙己与掌柜之间存在债务关系，掌柜提到孔乙己欠了十九个钱。&lt;SEP&gt;掌柜利用孔乙己的弱点来制造笑料，显示出对他的轻视和不尊重。&lt;SEP&gt;孔乙己与掌柜之间的对话揭示了孔乙己的社会地位低下以及掌柜对他的态度冷漠。&lt;SEP&gt;掌柜经常嘲笑孔乙己的行为，并且关注他的欠账问题，反映了两人之间的社会地位差异和冷漠关系。</data>
+      <data key="d7">债务关系, 商业往来&lt;SEP&gt;权力关系, 社会地位差异&lt;SEP&gt;社会底层人物, 商业关系&lt;SEP&gt;社会阶层, 冷漠态度</data>
+      <data key="d8">chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922&lt;SEP&gt;chunk-9f6539d16a8de54cbf4c80dc47ddf17f&lt;SEP&gt;chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="掌柜" target="旁人">
+      <data key="d5">8.0</data>
+      <data key="d6">掌柜与旁人一起参与嘲笑孔乙己的行为，显示出他们共同的社会态度。</data>
+      <data key="d7">群体行为, 社会关系</data>
+      <data key="d8">chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="掌柜" target="孩子">
+      <data key="d5">6.0</data>
+      <data key="d6">掌柜对孩子的态度与孔乙己形成对比，掌柜并未表现出教育孩子的意图。</data>
+      <data key="d7">教育缺失, 社会差异</data>
+      <data key="d8">chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="掌柜" target="店铺">
+      <data key="d5">10.0</data>
+      <data key="d6">掌柜是店铺的经营者，负责管理店铺并与顾客互动。</data>
+      <data key="d7">经营管理, 商业活动</data>
+      <data key="d8">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="短衣帮" target="黄酒">
+      <data key="d5">7.0</data>
+      <data key="d6">短衣帮是黄酒的主要消费者，通常选择最便宜的饮酒方式。</data>
+      <data key="d7">消费习惯, 顾客偏好</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="长衫主顾" target="荤菜">
+      <data key="d5">6.0</data>
+      <data key="d6">长衫主顾更倾向于购买较高档次的荤菜，体现了其经济实力。</data>
+      <data key="d7">消费层次, 经济差异</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="我" target="黄酒">
+      <data key="d5">9.0</data>
+      <data key="d6">我的主要职责包括为顾客提供温黄酒服务，这是我在酒店的工作内容之一。</data>
+      <data key="d7">工作职责, 产品关联</data>
+      <data key="d8">chunk-43e2c58b84299c01cfdc5106fcf3e983</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="茴香豆" target="孔乙己">
+      <data key="d5">21.0</data>
+      <data key="d6">孔乙己在酒店点茴香豆作为下酒菜，体现了他的生活习惯和饮食偏好。&lt;SEP&gt;孔乙己用茴香豆作为教学工具，试图向孩子传授知识。&lt;SEP&gt;孔乙己用茴香豆吸引邻舍孩子，表现出他的善良和与孩子们的互动关系。</data>
+      <data key="d7">个人喜好, 生活细节&lt;SEP&gt;互动行为, 善良表现&lt;SEP&gt;教育意图, 知识传递</data>
+      <data key="d8">chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922&lt;SEP&gt;chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="茴香豆" target="孩子">
+      <data key="d5">7.0</data>
+      <data key="d6">茴香豆成为孔乙己教育孩子的媒介，体现了其在故事中的象征意义。</data>
+      <data key="d7">教育工具, 知识象征</data>
+      <data key="d8">chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="酒店">
+      <data key="d5">14.0</data>
+      <data key="d6">孔乙己在酒店喝酒时，经常受到众人的嘲笑，但他从不拖欠酒钱，表现出了某种诚信。&lt;SEP&gt;孔乙己在酒店工作，负责温酒的任务，尽管工作单调无聊，但他并未失职。</data>
+      <data key="d7">工作关系, 职务安排&lt;SEP&gt;社会互动, 经济状况</data>
+      <data key="d8">chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="主顾">
+      <data key="d5">6.0</data>
+      <data key="d6">主顾们经常嘲笑孔乙己，尤其是关于他的伤疤和偷书的行为，而孔乙己则试图为自己辩护。</data>
+      <data key="d7">社会互动, 嘲笑与反击</data>
+      <data key="d8">chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="荐头">
+      <data key="d5">8.0</data>
+      <data key="d6">荐头为孔乙己争取了工作机会，避免了他被辞退的命运，尽管后来改为了无聊的温酒职务。</data>
+      <data key="d7">职业保障, 推荐关系</data>
+      <data key="d8">chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="何家">
+      <data key="d5">15.0</data>
+      <data key="d6">孔乙己被指控偷了何家的书，导致被人吊着打。这显示了他的贫困和无奈。&lt;SEP&gt;孔乙己被指控偷了何家的书，这一事件成为主顾们嘲笑他的理由之一。</data>
+      <data key="d7">偷窃事件, 社会地位&lt;SEP&gt;社会冲突, 偷窃指控</data>
+      <data key="d8">chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-81b290d469a8ab3ad80151d63aef2d78</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="秀才">
+      <data key="d5">19.0</data>
+      <data key="d6">孔乙己未能考中秀才，这成为他人生的一大遗憾和他人嘲笑的把柄。&lt;SEP&gt;孔乙己虽然认识字，但由于种种原因，未能成为秀才，反映了他的人生失败和社会地位低下。</data>
+      <data key="d7">个人失败, 社会期待&lt;SEP&gt;教育背景, 科举制度</data>
+      <data key="d8">chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="众人">
+      <data key="d5">16.0</data>
+      <data key="d6">孔乙己在酒店里受到众人的嘲笑和轻视，但他在酒店里的品行较好，从不拖欠酒钱。&lt;SEP&gt;孔乙己成为众人嘲笑的对象，反映出社会对失败者的冷酷态度。</data>
+      <data key="d7">社会互动, 尊严受损&lt;SEP&gt;社会歧视, 人际关系</data>
+      <data key="d8">chunk-e4a72ca66388f855abf445099826007d&lt;SEP&gt;chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="钞书工作">
+      <data key="d5">8.0</data>
+      <data key="d6">孔乙己通过钞书工作来维持生计，但由于好喝懒做，最终失去了这份工作。</data>
+      <data key="d7">谋生手段, 工作失败</data>
+      <data key="d8">chunk-e4a72ca66388f855abf445099826007d</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="偷窃行为">
+      <data key="d5">9.0</data>
+      <data key="d6">孔乙己因为贫困和无法找到稳定工作，不得不偶尔进行偷窃行为以维持生活。</data>
+      <data key="d7">生活困境, 违法行为</data>
+      <data key="d8">chunk-e4a72ca66388f855abf445099826007d</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="旁人">
+      <data key="d5">14.0</data>
+      <data key="d6">孔乙己与旁人的互动揭示了社会对失败者的冷漠态度，旁人通过嘲笑他来取乐。&lt;SEP&gt;旁人对孔乙己的态度冷漠且充满嘲笑，揭示了社会对底层人物的不公。</data>
+      <data key="d7">社会关系, 冷漠态度&lt;SEP&gt;社会态度, 冷漠关系</data>
+      <data key="d8">chunk-1a93cfe8afaf6a320d5ce20361af4922&lt;SEP&gt;chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="孩子">
+      <data key="d5">8.0</data>
+      <data key="d6">孔乙己试图教导孩子写茴香豆的‘茴’字，显示出他对知识传承的渴望。</data>
+      <data key="d7">教育意图, 知识传递</data>
+      <data key="d8">chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="之乎者也">
+      <data key="d5">7.0</data>
+      <data key="d6">孔乙己使用‘之乎者也’这类文言词汇，表明他的学问背景和语言习惯。</data>
+      <data key="d7">语言风格, 文化背景</data>
+      <data key="d8">chunk-1a93cfe8afaf6a320d5ce20361af4922</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="邻舍孩子">
+      <data key="d5">9.0</data>
+      <data key="d6">孔乙己给邻舍孩子茴香豆吃，表现出他的善良和孩子们对他的依赖。</data>
+      <data key="d7">善良行为, 互动关系</data>
+      <data key="d8">chunk-b971ccabec29335d2c9d22bc5ffad65f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="丁举人">
+      <data key="d5">19.0</data>
+      <data key="d6">孔乙己因偷丁举人家的东西而被打断了腿，显示两人之间存在权力和地位的悬殊。&lt;SEP&gt;孔乙己因偷窃被丁举人惩罚，导致腿被打折。</data>
+      <data key="d7">冲突关系, 惩罚结果&lt;SEP&gt;社会阶层差异, 暴力事件</data>
+      <data key="d8">chunk-b971ccabec29335d2c9d22bc5ffad65f&lt;SEP&gt;chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="酒店柜台">
+      <data key="d5">7.0</data>
+      <data key="d6">孔乙己在酒店柜台与掌柜和其他顾客互动，并展示自己的学问。</data>
+      <data key="d7">场景关联, 行为地点</data>
+      <data key="d8">chunk-b971ccabec29335d2c9d22bc5ffad65f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="回字写法">
+      <data key="d5">9.0</data>
+      <data key="d6">孔乙己通过回字写法向他人展示自己的知识，反映出他对传统文化的执着。</data>
+      <data key="d7">文化象征, 知识展示</data>
+      <data key="d8">chunk-b971ccabec29335d2c9d22bc5ffad65f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="中秋">
+      <data key="d5">6.0</data>
+      <data key="d6">中秋作为时间背景，与孔乙己长久未到酒店的情节相关联。</data>
+      <data key="d7">时间关联, 情节发展</data>
+      <data key="d8">chunk-b971ccabec29335d2c9d22bc5ffad65f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="店铺">
+      <data key="d5">8.0</data>
+      <data key="d6">孔乙己经常到店铺喝酒，显示了他对酒的需求以及与店铺的关系。</data>
+      <data key="d7">消费关系, 生活习惯</data>
+      <data key="d8">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="酒">
+      <data key="d5">9.0</data>
+      <data key="d6">孔乙己以酒为主要消费物品，体现了他的生活习惯和经济状况。</data>
+      <data key="d7">消费需求, 生活方式</data>
+      <data key="d8">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="蒲包">
+      <data key="d5">7.0</data>
+      <data key="d6">孔乙己使用蒲包垫在腿下，反映了他贫困的生活状态。</data>
+      <data key="d7">生活用品, 贫困象征</data>
+      <data key="d8">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="草绳">
+      <data key="d5">6.0</data>
+      <data key="d6">孔乙己用草绳挂住蒲包，进一步说明了他的贫困。</data>
+      <data key="d7">生活用品, 贫困象征</data>
+      <data key="d8">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="酒馆">
+      <data key="d5">8.0</data>
+      <data key="d6">孔乙己频繁光顾酒馆，这里是他的主要活动场所，也揭示了他的生活状态。</data>
+      <data key="d7">生活场景, 社会地位</data>
+      <data key="d8">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="年关">
+      <data key="d5">7.0</data>
+      <data key="d6">年关多次提到孔乙己的欠账情况，显示了他的经济困境和逐渐被遗忘的命运。</data>
+      <data key="d7">时间推移, 经济困境</data>
+      <data key="d8">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="四文大钱">
+      <data key="d5">7.0</data>
+      <data key="d6">四文大钱是孔乙己支付酒钱的方式，体现了他的经济窘迫。</data>
+      <data key="d7">经济状况, 贫穷生活</data>
+      <data key="d8">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="破衣袋">
+      <data key="d5">8.0</data>
+      <data key="d6">破衣袋象征孔乙己的贫困与潦倒，进一步刻画了他的形象。</data>
+      <data key="d7">生活状态, 贫困标志</data>
+      <data key="d8">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="孔乙己" target="粉板">
+      <data key="d5">6.0</data>
+      <data key="d6">粉板记录了孔乙己的欠账情况，反映出他长期处于经济困境中。</data>
+      <data key="d7">经济困境, 欠债记录</data>
+      <data key="d8">chunk-13f819ed35d9eb4292722ed68c3e9e8a</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="中秋" target="初冬">
+      <data key="d5">7.0</data>
+      <data key="d6">中秋过后，天气逐渐变冷，进入初冬，体现了时间的推移和季节的变化。</data>
+      <data key="d7">时间顺序, 季节变化</data>
+      <data key="d8">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+    <edge source="初冬" target="秋风">
+      <data key="d5">8.0</data>
+      <data key="d6">秋风逐渐变凉，预示着初冬的到来，体现了季节的更替。</data>
+      <data key="d7">季节变化, 时间推移</data>
+      <data key="d8">chunk-9f6539d16a8de54cbf4c80dc47ddf17f</data>
+      <data key="d9">./kongyiji/kongyiji.txt</data>
+    </edge>
+  </graph>
+</graphml>

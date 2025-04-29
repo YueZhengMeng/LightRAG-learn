@@ -1894,18 +1894,23 @@ async def naive_query(
     system_prompt: str | None = None,
 ) -> str | AsyncIterator[str]:
     # Handle cache
+
+    # LLM接口
     use_model_func = (
         query_param.model_func
         if query_param.model_func
         else global_config["llm_model_func"]
     )
+    # 在缓存中查找是否有与当前query相似度大于阈值的缓存项
     args_hash = compute_args_hash(query_param.mode, query, cache_type="query")
     cached_response, quantized, min_val, max_val = await handle_cache(
         hashing_kv, args_hash, query, query_param.mode, cache_type="query"
     )
+    # 如果命中，则直接返回缓存
     if cached_response is not None:
         return cached_response
 
+    # 调用文本切片的向量数据库接口，获取与query最相似的top_k个文本切片
     results = await chunks_vdb.query(
         query, top_k=query_param.top_k, ids=query_param.ids
     )
@@ -1916,6 +1921,7 @@ async def naive_query(
     chunks = await text_chunks_db.get_by_ids(chunks_ids)
 
     # Filter out invalid chunks
+    # 过滤掉无有效内容的文本切片
     valid_chunks = [
         chunk for chunk in chunks if chunk is not None and "content" in chunk
     ]
@@ -1924,6 +1930,7 @@ async def naive_query(
         logger.warning("No valid chunks found after filtering")
         return PROMPTS["fail_response"]
 
+    # 对检索到的文本切片进行encode，只保留累计token数量不超过max_token_for_text_unit的前几条
     maybe_trun_chunks = truncate_list_by_token_size(
         valid_chunks,
         key=lambda x: x["content"],
@@ -1938,6 +1945,7 @@ async def naive_query(
         f"Truncate chunks from {len(chunks)} to {len(maybe_trun_chunks)} (max tokens:{query_param.max_token_for_text_unit})"
     )
 
+    # 拼接文本切片部分的context
     section = "\n--New Chunk--\n".join(
         [
             "File path: " + c["file_path"] + "\n" + c["content"]
@@ -1945,34 +1953,43 @@ async def naive_query(
         ]
     )
 
+    # 如果只需要检索结果context，则直接返回
     if query_param.only_need_context:
         return section
 
     # Process conversation history
+    # 如果有历史对话，则拼接历史对话为history_context
     history_context = ""
     if query_param.conversation_history:
         history_context = get_conversation_turns(
             query_param.conversation_history, query_param.history_turns
         )
 
+    # 获取系统提示词模板
     sys_prompt_temp = system_prompt if system_prompt else PROMPTS["naive_rag_response"]
+    # 组装系统提示词
     sys_prompt = sys_prompt_temp.format(
         content_data=section,
         response_type=query_param.response_type,
         history=history_context,
     )
 
+    # 如果只需要prompt，则直接返回
     if query_param.only_need_prompt:
         return sys_prompt
 
+    # tokenize prompt，并记录token数量
     len_of_prompts = len(encode_string_by_tiktoken(query + sys_prompt))
     logger.debug(f"[naive_query]Prompt Tokens: {len_of_prompts}")
 
+    # 调用LLM接口
     response = await use_model_func(
         query,
         system_prompt=sys_prompt,
     )
 
+    # 如果response是包括sys_prompt在内的全序列
+    # 则去掉sys_prompt以及special token，只返回新增的response
     if len(response) > len(sys_prompt):
         response = (
             response[len(sys_prompt) :]
@@ -1986,6 +2003,7 @@ async def naive_query(
         )
 
     # Save to cache
+    # 保存到缓存
     await save_to_cache(
         hashing_kv,
         CacheData(
@@ -2000,6 +2018,7 @@ async def naive_query(
         ),
     )
 
+    # 返回response
     return response
 
 

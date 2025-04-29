@@ -1377,6 +1377,7 @@ class LightRAG:
                 system_prompt=system_prompt,
             )
         elif param.mode == "naive":
+            # 基于 文本切片与query 的 embedding向量 的相似度的检索
             response = await naive_query(
                 query.strip(),
                 self.chunks_vdb,

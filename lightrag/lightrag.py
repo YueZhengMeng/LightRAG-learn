@@ -571,7 +571,6 @@ class LightRAG:
         file_paths: str | list[str] | None = None,
     ) -> None:
         """Async Insert documents with checkpoint support
-
         Args:
             input: Single document string or list of document strings
             split_by_character: if split_by_character is not None, split the string by character, if chunk longer than
@@ -581,7 +580,9 @@ class LightRAG:
             ids: list of unique document IDs, if not provided, MD5 hash IDs will be generated
             file_paths: list of file paths corresponding to each document, used for citation
         """
+        # 新增文档预处理
         await self.apipeline_enqueue_documents(input, ids, file_paths)
+        # 对新增文档进行切片、实体与关系提取、索引构建
         await self.apipeline_process_enqueue_documents(
             split_by_character, split_by_character_only
         )
@@ -744,6 +745,7 @@ class LightRAG:
         }
 
         # 3. Generate document initial status
+        # get_content_summary：截断长度超过max_length（默认值为250）的文本，并在结尾添加省略号
         new_docs: dict[str, Any] = {
             id_: {
                 "status": DocStatus.PENDING,
@@ -899,7 +901,10 @@ class LightRAG:
                     pipeline_status: dict,
                     pipeline_status_lock: asyncio.Lock,
                 ) -> None:
-                    """Process single document"""
+                    """
+                    Process single document
+                    # 对单个文档进行切片、实体与关系提取、索引构建
+                    """
                     try:
                         # Get file path from status document
                         file_path = getattr(status_doc, "file_path", "unknown_source")
@@ -939,22 +944,27 @@ class LightRAG:
                                 }
                             )
                         )
+                        # 创建文本切片embedding任务
                         chunks_vdb_task = asyncio.create_task(
                             self.chunks_vdb.upsert(chunks)
                         )
+                        # 创建实体与关系提取任务
                         entity_relation_task = asyncio.create_task(
                             self._process_entity_relation_graph(
                                 chunks, pipeline_status, pipeline_status_lock
                             )
                         )
+                        # 创建原始文档信息汇总任务
                         full_docs_task = asyncio.create_task(
                             self.full_docs.upsert(
                                 {doc_id: {"content": status_doc.content}}
                             )
                         )
+                        # 创建文本切片信息汇总任务
                         text_chunks_task = asyncio.create_task(
                             self.text_chunks.upsert(chunks)
                         )
+                        # 汇总所有任务
                         tasks = [
                             doc_status_task,
                             chunks_vdb_task,
@@ -962,6 +972,7 @@ class LightRAG:
                             full_docs_task,
                             text_chunks_task,
                         ]
+                        # 基于协程并发，等待所有任务完成
                         await asyncio.gather(*tasks)
                         await self.doc_status.upsert(
                             {
@@ -1012,6 +1023,7 @@ class LightRAG:
 
                 # 3. iterate over batches
                 total_batches = len(docs_batches)
+                # 对于每个文档批次
                 for batch_idx, docs_batch in enumerate(docs_batches):
                     current_batch = batch_idx + 1
                     log_message = (
@@ -1023,6 +1035,7 @@ class LightRAG:
                     pipeline_status["history_messages"].append(log_message)
 
                     doc_tasks = []
+                    # 为该批次的文档创建处理任务
                     for doc_id, status_doc in docs_batch:
                         doc_tasks.append(
                             process_document(
@@ -1036,7 +1049,11 @@ class LightRAG:
                         )
 
                     # Process documents in one batch parallelly
+                    # 并发处理该批次的文档
                     await asyncio.gather(*doc_tasks)
+                    # 调用文档处理与插入结束的后处理函数
+                    # 先并发调用各存储对象的后处理函数，将数据保存到磁盘
+                    # 之后更新pipline状态
                     await self._insert_done()
 
                     log_message = f"Completed batch {current_batch} of {total_batches}."
@@ -1102,6 +1119,11 @@ class LightRAG:
     async def _insert_done(
         self, pipeline_status=None, pipeline_status_lock=None
     ) -> None:
+        """
+        # 文档处理与插入结束的后处理函数
+        # 先并发调用各存储对象的后处理函数，将数据保存到磁盘
+        # 之后更新pipline状态
+        """
         tasks = [
             cast(StorageNameSpace, storage_inst).index_done_callback()
             for storage_inst in [  # type: ignore

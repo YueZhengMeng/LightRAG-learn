@@ -300,6 +300,8 @@ class LightRAG:
         if hasattr(self, "log_file_path"):
             delattr(self, "log_file_path")
 
+        # 初始化多进程模式下，各进程共享的数据
+        # 这里未传递参数workers，且默认workers=1，即不使用多进程
         initialize_share_data()
 
         if not os.path.exists(self.working_dir):
@@ -331,7 +333,8 @@ class LightRAG:
         _print_config = ",\n  ".join([f"{k} = {v}" for k, v in global_config.items()])
         logger.debug(f"LightRAG init with param:\n  {_print_config}\n")
 
-        # Init LLM
+        # Init Embedding Model
+        # 基于信号量机制限制embedding_func并发数
         self.embedding_func = limit_async_func_call(self.embedding_func_max_async)(  # type: ignore
             self.embedding_func
         )
@@ -420,6 +423,7 @@ class LightRAG:
         # Directly use llm_response_cache, don't create a new object
         hashing_kv = self.llm_response_cache
 
+        # 基于信号量机制限制llm_model_func并发数
         self.llm_model_func = limit_async_func_call(self.llm_model_max_async)(
             partial(
                 self.llm_model_func,  # type: ignore

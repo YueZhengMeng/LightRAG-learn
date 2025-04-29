@@ -142,6 +142,10 @@ async def _handle_single_entity_extraction(
     chunk_key: str,
     file_path: str = "unknown_source",
 ):
+    """
+    # 对初步结构化的单个实体提取结果进行清洗、验证和封装
+    # 确保 实体名，实体类型，实体描述 字段格式无误，并加入file_path信息
+    """
     if len(record_attributes) < 4 or record_attributes[0] != '"entity"':
         return None
 
@@ -183,6 +187,10 @@ async def _handle_single_relationship_extraction(
     chunk_key: str,
     file_path: str = "unknown_source",
 ):
+    """
+    # 对初步结构化的单个关系提取结果进行清洗、验证和封装
+    # 并加入file_path信息
+    """
     if len(record_attributes) < 5 or record_attributes[0] != '"relationship"':
         return None
     # add this record as edge
@@ -213,14 +221,23 @@ async def _merge_nodes_then_upsert(
     knowledge_graph_inst: BaseGraphStorage,
     global_config: dict,
 ):
-    """Get existing nodes from knowledge graph use name,if exists, merge data, else create, then upsert."""
+    """
+    Get existing nodes from knowledge graph use name,if exists, merge data, else create, then upsert.
+    # 将实体插入图数据库
+    # 如果图数据库中已经存在该实体，则会进行信息汇总与更新
+    # 这里的汇总与更新是直接用分隔符拼接新的字符串
+    # 只有在description过长时才会调用LLM进行总结
+    """
+    # 初始化四个列表用于存储实体类型、来源文本片段ID、描述和文件路径
     already_entity_types = []
     already_source_ids = []
     already_description = []
     already_file_paths = []
 
+    # 尝试从图数据库中获取当前实体的信息
     already_node = await knowledge_graph_inst.get_node(entity_name)
     if already_node is not None:
+        # 如果实体已存在，则提取相关信息
         already_entity_types.append(already_node["entity_type"])
         already_source_ids.extend(
             split_string_by_multi_markers(already_node["source_id"], [GRAPH_FIELD_SEP])
@@ -230,6 +247,7 @@ async def _merge_nodes_then_upsert(
         )
         already_description.append(already_node["description"])
 
+    # 以出现次数降序排列实体类型，并获取出现次数最多的类型
     entity_type = sorted(
         Counter(
             [dp["entity_type"] for dp in nodes_data] + already_entity_types
@@ -237,20 +255,27 @@ async def _merge_nodes_then_upsert(
         key=lambda x: x[1],
         reverse=True,
     )[0][0]
+    # 使用分隔符<SEP>拼接去重后的多条描述
     description = GRAPH_FIELD_SEP.join(
         sorted(set([dp["description"] for dp in nodes_data] + already_description))
     )
+    # 使用分隔符<SEP>拼接去重后的多条来源文本片段ID
     source_id = GRAPH_FIELD_SEP.join(
         set([dp["source_id"] for dp in nodes_data] + already_source_ids)
     )
+    # 使用分隔符<SEP>拼接去重后的多条文件路径
     file_path = GRAPH_FIELD_SEP.join(
         set([dp["file_path"] for dp in nodes_data] + already_file_paths)
     )
-
     logger.debug(f"file_path: {file_path}")
+
+    # 检查tokenize之后的description是否过长（超过summary_max_tokens）
+    # 如果过长，则调用LLM进行总结
     description = await _handle_entity_relation_summary(
         entity_name, description, global_config
     )
+
+    # 封装节点数据
     node_data = dict(
         entity_id=entity_name,
         entity_type=entity_type,
@@ -258,10 +283,12 @@ async def _merge_nodes_then_upsert(
         source_id=source_id,
         file_path=file_path,
     )
+    # 将节点插入图数据库
     await knowledge_graph_inst.upsert_node(
         entity_name,
         node_data=node_data,
     )
+    # 返回封装后的节点数据
     node_data["entity_name"] = entity_name
     return node_data
 
@@ -273,17 +300,30 @@ async def _merge_edges_then_upsert(
     knowledge_graph_inst: BaseGraphStorage,
     global_config: dict,
 ):
+    """
+    # 将关系插入图数据库
+    # 如果图数据库中已经存在该关系，则会进行信息汇总与更新
+    # 这里的汇总与更新是直接用分隔符拼接新的字符串，边权重则是直接累加
+    # 只有在description过长时才会调用LLM进行总结
+    # 如果端点不存在，则会插入新节点。
+    # 该节点description使用边的description字段代替，entity_type使用UNKNOWN占位
+    """
+    # 初始化五个列表用于存储权重、来源文本片段ID、描述、关键词和文件路径
     already_weights = []
     already_source_ids = []
     already_description = []
     already_keywords = []
     already_file_paths = []
 
+    # 尝试从图数据库中获取当前关系的信息
     if await knowledge_graph_inst.has_edge(src_id, tgt_id):
         already_edge = await knowledge_graph_inst.get_edge(src_id, tgt_id)
         # Handle the case where get_edge returns None or missing fields
         if already_edge:
+            # 如果关系已存在，则提取相关信息
+
             # Get weight with default 0.0 if missing
+            # 提取权重时，如果缺失，则使用默认值0.0
             already_weights.append(already_edge.get("weight", 0.0))
 
             # Get source_id with empty string default if missing or None
@@ -315,7 +355,9 @@ async def _merge_edges_then_upsert(
                 )
 
     # Process edges_data with None checks
+    # 叠加权重数值
     weight = sum([dp["weight"] for dp in edges_data] + already_weights)
+    # 使用分隔符<SEP>拼接去重后的多条描述
     description = GRAPH_FIELD_SEP.join(
         sorted(
             set(
@@ -324,6 +366,7 @@ async def _merge_edges_then_upsert(
             )
         )
     )
+    # 使用分隔符<SEP>拼接去重后的多个关键词
     keywords = GRAPH_FIELD_SEP.join(
         sorted(
             set(
@@ -332,12 +375,14 @@ async def _merge_edges_then_upsert(
             )
         )
     )
+    # 使用分隔符<SEP>拼接去重后的多个来源文本片段ID
     source_id = GRAPH_FIELD_SEP.join(
         set(
             [dp["source_id"] for dp in edges_data if dp.get("source_id")]
             + already_source_ids
         )
     )
+    # 使用分隔符<SEP>拼接去重后的多个文件路径
     file_path = GRAPH_FIELD_SEP.join(
         set(
             [dp["file_path"] for dp in edges_data if dp.get("file_path")]
@@ -345,8 +390,12 @@ async def _merge_edges_then_upsert(
         )
     )
 
+    # 对于边两边的节点
     for need_insert_id in [src_id, tgt_id]:
+        # 如果节点不存在，则插入节点
         if not (await knowledge_graph_inst.has_node(need_insert_id)):
+            # 节点description使用边的description字段代替
+            # entity_type使用UNKNOWN占位
             await knowledge_graph_inst.upsert_node(
                 need_insert_id,
                 node_data={
@@ -357,9 +406,14 @@ async def _merge_edges_then_upsert(
                     "file_path": file_path,
                 },
             )
+
+    # 检查tokenize之后的description是否过长（超过summary_max_tokens）
+    # 如果过长，则调用LLM进行总结
     description = await _handle_entity_relation_summary(
         f"({src_id}, {tgt_id})", description, global_config
     )
+
+    # 封装边数据，并插入图数据库
     await knowledge_graph_inst.upsert_edge(
         src_id,
         tgt_id,
@@ -372,6 +426,7 @@ async def _merge_edges_then_upsert(
         ),
     )
 
+    # 封装边数据
     edge_data = dict(
         src_id=src_id,
         tgt_id=tgt_id,
@@ -380,7 +435,7 @@ async def _merge_edges_then_upsert(
         source_id=source_id,
         file_path=file_path,
     )
-
+    # 返回封装后的边数据
     return edge_data
 
 
@@ -389,25 +444,34 @@ async def extract_entities(
     knowledge_graph_inst: BaseGraphStorage,
     entity_vdb: BaseVectorStorage,
     relationships_vdb: BaseVectorStorage,
-    global_config: dict[str, str],
+    global_config: dict[str, ...],
     pipeline_status: dict = None,
     pipeline_status_lock=None,
     llm_response_cache: BaseKVStorage | None = None,
 ) -> None:
+
+    # LLM接口函数
     use_llm_func: callable = global_config["llm_model_func"]
+    # 对实体进行多轮提取，以确保充分提取的轮数
     entity_extract_max_gleaning = global_config["entity_extract_max_gleaning"]
+    # 是否启用LLM对话缓存，即在和LLM对话时，先从缓存中尝试获取相同的用户输入对应的response，如果缓存中不存在，则从LLM接口中获取，并更新缓存。
     enable_llm_cache_for_entity_extract: bool = global_config[
         "enable_llm_cache_for_entity_extract"
     ]
 
+    # 获取所有文本切片的元组
     ordered_chunks = list(chunks.items())
     # add language and example number params to prompt
+    # 要求LLM用哪种语言回答
     language = global_config["addon_params"].get(
         "language", PROMPTS["DEFAULT_LANGUAGE"]
     )
+    # 要提取的实体类型
+    # 默认为['organization', 'person', 'geo', 'event', 'category']
     entity_types = global_config["addon_params"].get(
         "entity_types", PROMPTS["DEFAULT_ENTITY_TYPES"]
     )
+    # 用于few shot的example数量，默认提供了3个
     example_number = global_config["addon_params"].get("example_number", None)
     if example_number and example_number < len(PROMPTS["entity_extraction_examples"]):
         examples = "\n".join(
@@ -416,6 +480,7 @@ async def extract_entities(
     else:
         examples = "\n".join(PROMPTS["entity_extraction_examples"])
 
+    # 汇总填充example模板所需的参数
     example_context_base = dict(
         tuple_delimiter=PROMPTS["DEFAULT_TUPLE_DELIMITER"],
         record_delimiter=PROMPTS["DEFAULT_RECORD_DELIMITER"],
@@ -424,9 +489,12 @@ async def extract_entities(
         language=language,
     )
     # add example's format
+    # 填充example模板
     examples = examples.format(**example_context_base)
 
+    # 实体提取的prompt模板
     entity_extract_prompt = PROMPTS["entity_extraction"]
+    # 汇总填充实体提取的prompt模板 与 进一步提取实体的prompt模板 所需的参数
     context_base = dict(
         tuple_delimiter=PROMPTS["DEFAULT_TUPLE_DELIMITER"],
         record_delimiter=PROMPTS["DEFAULT_RECORD_DELIMITER"],
@@ -435,24 +503,35 @@ async def extract_entities(
         examples=examples,
         language=language,
     )
-
+    # 获取进一步提取实体的prompt模板，并填充参数
     continue_prompt = PROMPTS["entity_continue_extraction"].format(**context_base)
+
+    # 用于让LLM判断是否需要继续提取实体的prompt
     if_loop_prompt = PROMPTS["entity_if_loop_extraction"]
 
+    # 已处理的文本切片数量
     processed_chunks = 0
+    # 总文本切片数量
     total_chunks = len(ordered_chunks)
+    # 已提取的实体数量
     total_entities_count = 0
+    # 已提取的关系数量
     total_relations_count = 0
 
     # Get lock manager from shared storage
     from .kg.shared_storage import get_graph_db_lock
-
+    # 图数据库互斥锁，避免多个进程同时修改图数据库
     graph_db_lock = get_graph_db_lock(enable_logging=False)
 
     async def _user_llm_func_with_cache(
         input_text: str, history_messages: list[dict[str, str]] = None
     ) -> str:
+        """
+        # 用于调用LLM接口函数，并且使用缓存
+        """
+        # 如果在实体提取阶段启用LLM对话缓存
         if enable_llm_cache_for_entity_extract and llm_response_cache:
+            # 有历史消息则进行拼接
             if history_messages:
                 history = json.dumps(history_messages, ensure_ascii=False)
                 _prompt = history + "\n" + input_text
@@ -460,7 +539,9 @@ async def extract_entities(
                 _prompt = input_text
 
             # TODO： add cache_type="extract"
+            # 计算_prompt的MD5哈希值
             arg_hash = compute_args_hash(_prompt)
+            # 根据_prompt的MD5哈希值获取缓存数据
             cached_return, _1, _2, _3 = await handle_cache(
                 llm_response_cache,
                 arg_hash,
@@ -468,17 +549,22 @@ async def extract_entities(
                 "default",
                 cache_type="extract",
             )
+            # 如果缓存命中，则返回缓存数据
             if cached_return:
                 logger.debug(f"Found cache for {arg_hash}")
                 statistic_data["llm_cache"] += 1
                 return cached_return
             statistic_data["llm_call"] += 1
+
+            # 缓存未命中
+            # 根据是否有历史消息，分别调用LLM接口函数
             if history_messages:
                 res: str = await use_llm_func(
                     input_text, history_messages=history_messages
                 )
             else:
                 res: str = await use_llm_func(input_text)
+            # 并将新的response添加到缓存
             await save_to_cache(
                 llm_response_cache,
                 CacheData(
@@ -488,8 +574,11 @@ async def extract_entities(
                     cache_type="extract",
                 ),
             )
+            # 返回结果
             return res
 
+        # 如果不在实体提取阶段启用LLM对话缓存
+        # 直接根据是否有历史消息，分别调用LLM接口函数，并返回结果
         if history_messages:
             return await use_llm_func(input_text, history_messages=history_messages)
         else:
@@ -508,44 +597,56 @@ async def extract_entities(
         """
         maybe_nodes = defaultdict(list)
         maybe_edges = defaultdict(list)
-
+        # 先根据['##', '<|COMPLETE|>']切分为多条记录
         records = split_string_by_multi_markers(
             result,
             [context_base["record_delimiter"], context_base["completion_delimiter"]],
         )
 
+        # 对于每条记录
         for record in records:
+            # 先使用正则表达式提取()内的文本
             record = re.search(r"\((.*)\)", record)
+            # 如果提取失败，则跳过该记录
             if record is None:
                 continue
+            # 提取成功，则获取()内的文本
             record = record.group(1)
+            # 之后根据'<|>'将单条记录拆分为多个属性
             record_attributes = split_string_by_multi_markers(
                 record, [context_base["tuple_delimiter"]]
             )
-
+            # 验证该条数据是否为实体，如果是，则进行结构化封装
             if_entities = await _handle_single_entity_extraction(
                 record_attributes, chunk_key, file_path
             )
+            # 成功提取到实体，加入到maybe_nodes中，并继续处理下一条数据
             if if_entities is not None:
                 maybe_nodes[if_entities["entity_name"]].append(if_entities)
                 continue
 
+            # 未提取到实体，则：
+            # 验证该条数据是否为关系，如果是，则进行结构化封装
             if_relation = await _handle_single_relationship_extraction(
                 record_attributes, chunk_key, file_path
             )
+            # 成功提取到关系，加入到maybe_edges中，并继续处理下一条数据
             if if_relation is not None:
                 maybe_edges[(if_relation["src_id"], if_relation["tgt_id"])].append(
                     if_relation
                 )
-
+        # 返回实体和关系
         return maybe_nodes, maybe_edges
 
     async def _process_single_content(chunk_key_dp: tuple[str, TextChunkSchema]):
         """Process a single chunk
+        # 完成对一个文本片段进行实体提取并插入图数据库的所有工作
         Args:
             chunk_key_dp (tuple[str, TextChunkSchema]):
                 ("chunk-xxxxxx", {"tokens": int, "content": str, "full_doc_id": str, "chunk_order_index": int})
         """
+
+        # 获取待处理文本片段的信息
         nonlocal processed_chunks, total_entities_count, total_relations_count
         chunk_key = chunk_key_dp[0]
         chunk_dp = chunk_key_dp[1]
@@ -554,47 +655,61 @@ async def extract_entities(
         file_path = chunk_dp.get("file_path", "unknown_source")
 
         # Get initial extraction
+        # 使用外层extract_entities函数汇总的参数，填充实体提取prompt模板
         hint_prompt = entity_extract_prompt.format(
             **context_base, input_text="{input_text}"
         ).format(**context_base, input_text=content)
 
+        # 调用LLM接口函数，并使用缓存
         final_result = await _user_llm_func_with_cache(hint_prompt)
+        # 将对话历史信息转换为OpenAI格式
         history = pack_user_ass_to_openai_messages(hint_prompt, final_result)
 
         # Process initial extraction with file path
+        # 对LLM返回的字符串格式的实体提取结果进行结构化处理，返回结构化的实体与关系信息，并加入file_path信息
         maybe_nodes, maybe_edges = await _process_extraction_result(
             final_result, chunk_key, file_path
         )
 
         # Process additional gleaning results
+        # 对文本片段进行多轮实体提取，确保提取充分
         for now_glean_index in range(entity_extract_max_gleaning):
+            # 拼装进一步实体提取prompt与之前的对话历史信息
+            # 调用LLM进行多轮提取
             glean_result = await _user_llm_func_with_cache(
                 continue_prompt, history_messages=history
             )
 
+            # 将新一轮回答和历史信息转换为OpenAI格式
             history += pack_user_ass_to_openai_messages(continue_prompt, glean_result)
 
             # Process gleaning result separately with file path
+            # 对进一步提取的结果进行结构化处理，返回结构化的实体与关系信息，并加入file_path信息
             glean_nodes, glean_edges = await _process_extraction_result(
                 glean_result, chunk_key, file_path
             )
 
             # Merge results
+            # 合并多轮提取的结果
             for entity_name, entities in glean_nodes.items():
                 maybe_nodes[entity_name].extend(entities)
             for edge_key, edges in glean_edges.items():
                 maybe_edges[edge_key].extend(edges)
 
+            # 如果到达最大轮数，则跳出循环
             if now_glean_index == entity_extract_max_gleaning - 1:
                 break
 
+            # 否则，使用LLM判断是否需要继续进行提取
             if_loop_result: str = await _user_llm_func_with_cache(
                 if_loop_prompt, history_messages=history
             )
+            # 如果LLM返回的判断结果为"yes"，则继续进行提取，否则跳出循环
             if_loop_result = if_loop_result.strip().strip('"').strip("'").lower()
             if if_loop_result != "yes":
                 break
 
+        # 完成一个文本片段的处理，更新统计与状态信息
         processed_chunks += 1
         entities_count = len(maybe_nodes)
         relations_count = len(maybe_edges)
@@ -608,10 +723,14 @@ async def extract_entities(
         # Use graph database lock to ensure atomic merges and updates
         chunk_entities_data = []
         chunk_relationships_data = []
-
+        # 使用互斥锁，确保对图数据库的原子性更新
         async with graph_db_lock:
             # Process and update entities
             for entity_name, entities in maybe_nodes.items():
+                # 将实体插入图数据库
+                # 如果图数据库中已经存在该实体，则会进行信息汇总与更新
+                # 这里的汇总与更新是直接拼接新的字符串
+                # 只有在description过长时才会调用LLM进行总结
                 entity_data = await _merge_nodes_then_upsert(
                     entity_name, entities, knowledge_graph_inst, global_config
                 )
@@ -620,7 +739,14 @@ async def extract_entities(
             # Process and update relationships
             for edge_key, edges in maybe_edges.items():
                 # Ensure edge direction consistency
+                # 这里的排序是为了确保边的方向一致
                 sorted_edge_key = tuple(sorted(edge_key))
+                # 将关系插入图数据库
+                # 如果图数据库中已经存在该关系，则会进行信息汇总与更新
+                # 这里的汇总与更新是直接用分隔符拼接新的字符串，边权重则是直接累加
+                # 只有在description过长时才会调用LLM进行总结
+                # 如果端点不存在，则会插入新节点。
+                # 该节点description使用边的description字段代替，entity_type使用UNKNOWN占位
                 edge_data = await _merge_edges_then_upsert(
                     sorted_edge_key[0],
                     sorted_edge_key[1],
@@ -642,6 +768,8 @@ async def extract_entities(
                     }
                     for dp in chunk_entities_data
                 }
+                # 以每个实体的 'entity_name' + '\n' + 'description' 作为 'content'
+                # 输入embedding模型，得到向量后，和封装的其他信息一起插入到向量数据库中
                 await entity_vdb.upsert(data_for_vdb)
 
             if relationships_vdb is not None and chunk_relationships_data:
@@ -656,6 +784,8 @@ async def extract_entities(
                     }
                     for dp in chunk_relationships_data
                 }
+                # 以每个关系的 'src_id' + '\t' + 'tgt_id' + '\n' + 'keywords' + '\n' + 'description' 作为 'content'
+                # 输入embedding模型，得到向量后，和封装的其他信息一起插入到向量数据库中
                 await relationships_vdb.upsert(data_for_vdb)
 
             # Update counters
@@ -663,9 +793,12 @@ async def extract_entities(
             total_relations_count += len(chunk_relationships_data)
 
     # Handle all chunks in parallel
+    # 创建所有文本切片的处理任务，并使用协程并发执行
     tasks = [_process_single_content(c) for c in ordered_chunks]
     await asyncio.gather(*tasks)
 
+    # 实体提取完成
+    # 汇总一个日志信息，并更新pipeline_status
     log_message = f"Extracted {total_entities_count} entities + {total_relations_count} relationships (total)"
     logger.info(log_message)
     if pipeline_status is not None:

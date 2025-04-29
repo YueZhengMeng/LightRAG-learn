@@ -1101,6 +1101,7 @@ class LightRAG:
     async def _process_entity_relation_graph(
         self, chunk: dict[str, Any], pipeline_status=None, pipeline_status_lock=None
     ) -> None:
+        # 执行实体与关系提取
         try:
             await extract_entities(
                 chunk,
